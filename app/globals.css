@@ -1,22 +1,40 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme inline {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-primary: #3a7d5c;
+  --color-brand-bg: #0d0f11;
+  --color-brand-card: #14171a;
+  --color-brand-border: #2a2e33;
+  --color-brand-surface: #1a1d21;
+  --color-brand-hover: #1e2227;
+  --color-brand-accent: #4a9d70;
+  --color-brand-accent-bg: rgba(58, 125, 92, 0.1);
+  --color-brand-muted: #7a8290;
+  --color-brand-faint: #4a5060;
+}
 
 @layer base {
   body {
-    @apply bg-brand-bg text-slate-100 font-sans antialiased;
+    background-color: var(--color-brand-bg);
+    color: #f1f5f9;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   * {
-    border-color: theme('colors.brand.border');
+    border-color: var(--color-brand-border);
   }
 }
 
 .glass {
   background: rgba(20, 23, 26, 0.8);
   backdrop-filter: blur(12px);
-  border: 1px solid theme('colors.brand.border');
+  border: 1px solid var(--color-brand-border);
 }
 
 .signal-red { color: #d04848; background: rgba(208, 72, 72, 0.1); border-color: rgba(208, 72, 72, 0.2); }
@@ -31,7 +49,7 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply rounded-full;
+  border-radius: 9999px;
   background: rgba(122, 130, 144, 0.3);
 }
 ::-webkit-scrollbar-thumb:hover {
