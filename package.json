@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "rm -rf node_modules/.vite-temp node_modules/.vite && vite",
+    "build": "rm -rf node_modules/.vite-temp node_modules/.vite && vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist node_modules/.vite-temp node_modules/.vite"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
