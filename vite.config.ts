@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
@@ -14,14 +15,9 @@ export default defineConfig(({ mode }) => {
     p.VITE_SUPABASE_ANON_KEY || p.NEXT_PUBLIC_SUPABASE_ANON_KEY || p.SUPABASE_ANON_KEY || '';
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     build: {
       outDir: 'dist',
-    },
-    css: {
-      postcss: {
-        plugins: [],
-      },
     },
     define: {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
