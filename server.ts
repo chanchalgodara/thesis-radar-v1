@@ -1,11 +1,19 @@
+// This file is only used for "npm start" (local production mode).
+// In dev mode, Vite runs directly with the vite-api-plugin handling /api routes.
+// On Vercel, api/server.ts is the serverless function entry point.
+
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import { sql, initSchema } from "./lib/db";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+app.use(express.json());
 
 let schemaInited = false;
 async function ensureSchema() {
@@ -14,16 +22,10 @@ async function ensureSchema() {
   schemaInited = true;
 }
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json());
 app.use(async (_req, _res, next) => {
   await ensureSchema();
   next();
 });
-
-// API Routes
 
 // Theses
 app.get("/api/theses", async (_req, res) => {
@@ -33,18 +35,6 @@ app.get("/api/theses", async (_req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to fetch theses" });
-  }
-});
-
-app.get("/api/theses/:id", async (req, res) => {
-  try {
-    const { rows } = await sql`SELECT * FROM theses WHERE id = ${req.params.id}`;
-    const thesis = rows[0];
-    if (!thesis) return res.status(404).json({ error: "Thesis not found" });
-    res.json(thesis);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch thesis" });
   }
 });
 
@@ -138,8 +128,6 @@ app.post("/api/targets/bulk", async (req, res) => {
     if (!targetsList || !Array.isArray(targetsList)) {
       return res.status(400).json({ error: "Invalid targets data" });
     }
-    console.log(`Bulk inserting ${targetsList.length} targets for thesis ${thesis_id}`);
-
     for (const t of targetsList) {
       await sql`
         INSERT INTO targets (
@@ -240,7 +228,7 @@ app.post("/api/signals", async (req, res) => {
   }
 });
 
-// Summary Stats
+// Stats
 app.get("/api/stats", async (_req, res) => {
   try {
     const { rows: statsRows } = await sql`
@@ -250,7 +238,6 @@ app.get("/api/stats", async (_req, res) => {
         (SELECT COUNT(*)::int FROM signals_history WHERE created_at > NOW() - INTERVAL '7 days') as weekly_signals
     `;
     const stats = statsRows[0];
-
     const { rows: thesesStats } = await sql`
       SELECT
         t.id,
@@ -258,7 +245,6 @@ app.get("/api/stats", async (_req, res) => {
         (SELECT COUNT(*)::int FROM signals_history sh JOIN targets tg ON sh.target_id = tg.id WHERE tg.thesis_id = t.id) as signals_count
       FROM theses t
     `;
-
     res.json({ ...stats, thesesStats });
   } catch (e) {
     console.error(e);
@@ -266,24 +252,12 @@ app.get("/api/stats", async (_req, res) => {
   }
 });
 
-// Vite middleware for development; static for production
-if (process.env.NODE_ENV !== "production") {
-  createViteServer({ server: { middlewareMode: true }, appType: "spa" }).then((vite) => {
-    app.use(vite.middlewares);
-    if (!process.env.VERCEL) {
-      ensureSchema().then(() => {
-        app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
-      });
-    }
-  });
-} else {
-  app.use(express.static(path.join(__dirname, "dist")));
-  app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
-  if (!process.env.VERCEL) {
-    ensureSchema().then(() => {
-      app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
-    });
-  }
-}
+// Serve static in production
+app.use(express.static(path.join(__dirname, "dist")));
+app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
+
+ensureSchema().then(() => {
+  app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
+});
 
 export default app;

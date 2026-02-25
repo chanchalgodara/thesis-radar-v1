@@ -32,6 +32,7 @@ export function apiPlugin(): Plugin {
   return {
     name: "api-routes",
     configureServer(server: ViteDevServer) {
+      console.log("[v0] API plugin loaded. POSTGRES_URL set:", !!process.env.POSTGRES_URL, "DATABASE_URL set:", !!process.env.DATABASE_URL);
       server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
         if (!url.startsWith("/api/")) return next();

@@ -1,22 +1,34 @@
 import { neon } from "@neondatabase/serverless";
 
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
-const neonSql = connectionString ? neon(connectionString) : null;
+let _neonSql: ReturnType<typeof neon> | null = null;
+
+function getNeonSql() {
+  if (_neonSql) return _neonSql;
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+  if (!connectionString) {
+    throw new Error("DATABASE_URL or POSTGRES_URL is not set");
+  }
+  _neonSql = neon(connectionString);
+  return _neonSql;
+}
 
 /** Tagged template that returns { rows } to match the shape expected by server.ts */
 export async function sql(strings: TemplateStringsArray, ...values: unknown[]) {
-  if (!neonSql) throw new Error("DATABASE_URL or POSTGRES_URL is not set");
+  const neonSql = getNeonSql();
   const rows = await neonSql(strings, ...values);
   return { rows: Array.isArray(rows) ? rows : [rows] };
 }
 
 export async function initSchema() {
-  if (!connectionString) {
+  let neonSql: ReturnType<typeof neon>;
+  try {
+    neonSql = getNeonSql();
+  } catch {
     console.warn("DATABASE_URL / POSTGRES_URL not set; DB calls will fail. Add Neon Postgres (Vercel Marketplace) and set env.");
     return;
   }
   const run = async (strings: TemplateStringsArray, ...values: unknown[]) => {
-    const r = await neonSql!(strings, ...values);
+    const r = await neonSql(strings, ...values);
     return r;
   };
   await run`
