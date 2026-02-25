@@ -31,6 +31,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Thesis, Target as TargetType, DeepDive, generateTargets, refreshSignals, generateDeepDive, interpretThesis, executeSearch, suggestTheses, SuggestedThesis, WorkflowStep, generateMarketMap, MarketMap } from './services/geminiService';
+import * as db from './lib/db';
 
 // --- Components ---
 
@@ -1315,21 +1316,24 @@ export default function App() {
   }, []);
 
   const fetchTheses = async () => {
-    const res = await fetch('/api/theses');
-    const data = await res.json();
-    setTheses(data);
+    try {
+      const data = await db.fetchAllTheses();
+      setTheses(data);
+    } catch (e) { console.error('fetchTheses failed:', e); }
   };
 
   const fetchStats = async () => {
-    const res = await fetch('/api/stats');
-    const data = await res.json();
-    setStats(data);
+    try {
+      const data = await db.fetchStatsData();
+      setStats(data);
+    } catch (e) { console.error('fetchStats failed:', e); }
   };
 
   const fetchTargets = async (thesisId: string) => {
-    const res = await fetch(`/api/theses/${thesisId}/targets`);
-    const data = await res.json();
-    setTargets(data);
+    try {
+      const data = await db.fetchTargetsByThesis(thesisId);
+      setTargets(data);
+    } catch (e) { console.error('fetchTargets failed:', e); }
   };
 
   const handleSaveKey = (key: string) => {
@@ -1359,11 +1363,7 @@ export default function App() {
       const id = crypto.randomUUID();
       const newThesis = { ...formData, title, description, id, is_active: 1 } as Thesis;
       
-      fetch('/api/theses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newThesis)
-      }).catch(err => console.warn('Backend save failed (server may not be running):', err));
+      db.createThesis(newThesis).catch(err => console.warn('DB save failed:', err));
 
       const calibration = await interpretThesis(apiKey, newThesis);
       setCalibrationData(calibration);
@@ -1408,11 +1408,7 @@ export default function App() {
         last_updated: new Date().toISOString()
       }));
 
-      await fetch('/api/targets/bulk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ thesis_id: selectedThesis.id, targets: targetsWithIds })
-      });
+      await db.bulkInsertTargets(selectedThesis.id, targetsWithIds);
 
       await fetchTheses();
       await fetchStats();
@@ -1433,23 +1429,14 @@ export default function App() {
     const updates = await refreshSignals(apiKey, selectedThesis, targets);
     
     for (const update of updates) {
-      await fetch(`/api/targets/${update.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          signal_score: update.signal_score,
-          top_signal: update.top_signal
-        })
+      await db.updateTarget(update.id, {
+        signal_score: update.signal_score,
+        top_signal: update.top_signal,
       });
-      
-      await fetch('/api/signals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          target_id: update.id,
-          score: update.signal_score,
-          signal_text: update.top_signal
-        })
+      await db.insertSignal({
+        target_id: update.id,
+        score: update.signal_score,
+        signal_text: update.top_signal,
       });
     }
     
@@ -1524,11 +1511,7 @@ export default function App() {
         last_updated: new Date().toISOString()
       };
 
-      await fetch('/api/targets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTarget)
-      });
+      await db.insertTarget(newTarget);
 
       await fetchTargets(selectedThesis.id);
     } catch (error) {
@@ -1544,12 +1527,7 @@ export default function App() {
     setDeepDive(null);
 
     try {
-      const res = await Promise.race([
-        fetch(`/api/targets/${target.id}/deep-dive`),
-        new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
-      ]);
-      const existingDive = await res.json();
-
+      const existingDive = await db.getDeepDive(target.id);
       if (existingDive && existingDive.content) {
         setDeepDive(typeof existingDive.content === 'string' ? JSON.parse(existingDive.content) : existingDive.content);
         return;
@@ -1574,14 +1552,10 @@ export default function App() {
     try {
       const newDive = await generateDeepDive(apiKey, thesis, target);
       setDeepDive(newDive);
-      fetch('/api/deep-dives', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: crypto.randomUUID(),
-          target_id: target.id,
-          content: newDive
-        })
+      db.saveDeepDive({
+        id: crypto.randomUUID(),
+        target_id: target.id,
+        content: newDive,
       }).catch(err => console.warn('Failed to cache deep dive:', err));
     } catch (error: any) {
       console.error("Deep dive generation failed", error);
@@ -1604,26 +1578,18 @@ export default function App() {
 
   const handleTogglePin = async (target: TargetType) => {
     const newPinned = target.is_pinned ? 0 : 1;
-    await fetch(`/api/targets/${target.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_pinned: newPinned })
-    });
+    await db.updateTarget(target.id, { is_pinned: newPinned });
     setTargets(targets.map(t => t.id === target.id ? { ...t, is_pinned: newPinned } : t));
   };
 
   const handleDismiss = async (target: TargetType) => {
     const newDismissed = target.is_dismissed ? 0 : 1;
-    await fetch(`/api/targets/${target.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_dismissed: newDismissed })
-    });
+    await db.updateTarget(target.id, { is_dismissed: newDismissed });
     setTargets(targets.map(t => t.id === target.id ? { ...t, is_dismissed: newDismissed } : t));
   };
 
   const handleToggleStatus = async (id: string) => {
-    await fetch(`/api/theses/${id}/toggle`, { method: 'PATCH' });
+    await db.toggleThesisStatus(id);
     fetchTheses();
     fetchStats();
   };
@@ -1764,7 +1730,7 @@ export default function App() {
                     setView('watchlist');
                   }}
                   onDeleteThesis={async (id: string) => {
-                    await fetch(`/api/theses/${id}`, { method: 'DELETE' });
+                    await db.deleteThesis(id);
                     fetchTheses();
                     fetchStats();
                   }}
