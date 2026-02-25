@@ -491,7 +491,7 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-brand-border">
             {filteredTargets.map((target: TargetType) => (
               <tr 
                 key={target.id} 
@@ -710,7 +710,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card className="space-y-4 bg-purple-500/10 border-purple-500/20">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-purple-700 flex items-center gap-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-purple-400 flex items-center gap-2">
                 <Plus size={14} />
                 Team & Culture
               </h3>
@@ -742,11 +742,11 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
                     <th className="px-6 py-3">Investors</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-brand-border">
                   {dive.competitors?.map((comp: any, i: number) => (
                     <tr key={i} className="hover:bg-brand-surface transition-colors">
                       <td className="px-6 py-4 text-xs font-mono text-brand-faint">{comp.rank}</td>
-                      <td className="px-6 py-4 text-xs font-bold text-slate-800">{comp.name}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-slate-100">{comp.name}</td>
                       <td className="px-6 py-4 text-[10px] text-brand-accent uppercase font-bold">{comp.details}</td>
                       <td className="px-6 py-4 text-xs text-brand-muted max-w-xs">{comp.description}</td>
                       <td className="px-6 py-4 text-xs font-mono text-slate-400">{comp.funding}</td>
@@ -787,7 +787,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
               <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Key Financials</h4>
               <div className="bg-brand-card rounded-xl overflow-hidden border border-brand-border">
                 <table className="w-full text-left text-xs">
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-brand-border">
                     <tr>
                       <td className="px-4 py-2 text-brand-muted font-medium">Valuation</td>
                       <td className="px-4 py-2 text-brand-accent font-mono font-bold">{target.valuation || 'N/A'}</td>
@@ -1108,7 +1108,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                           value={priority}
                           onChange={(e) => updateSignalPriority(i, e.target.value)}
                           className={`text-[10px] font-bold uppercase bg-brand-card border border-brand-border rounded px-2 py-1 focus:ring-0 cursor-pointer ${
-                            priority === 'High' ? 'text-red-400' : priority === 'Medium' ? 'text-amber-600' : 'text-brand-faint'
+                            priority === 'High' ? 'text-red-400' : priority === 'Medium' ? 'text-amber-400' : 'text-brand-faint'
                           }`}
                         >
                           <option value="High">High</option>
@@ -1263,7 +1263,7 @@ const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
               <div className="flex items-start gap-3 mb-2 border-b border-brand-border/50 pb-4 relative group/header">
                 <div className="w-1.5 h-8 bg-brand-primary/30 rounded-full shrink-0 group-hover/card:bg-brand-primary transition-colors" />
                 <div className="cursor-help">
-                  <h3 className="font-bold text-lg text-slate-800 leading-tight">{cat.name}</h3>
+                  <h3 className="font-bold text-lg text-slate-100 leading-tight">{cat.name}</h3>
                   <div className="absolute left-0 top-full mt-2 hidden group-hover/header:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-64 text-xs text-brand-muted leading-relaxed">
                     {cat.description}
                   </div>
@@ -1273,7 +1273,7 @@ const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
               <div className="flex flex-wrap gap-2 content-start">
                 {cat.companies.map((company: any, j: number) => (
                   <div key={j} className="group relative grow">
-                    <div className="px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs font-bold text-slate-400 hover:text-brand-accent hover:border-brand-accent/50 shadow-none transition-all cursor-help text-center w-full">
+                    <div className="px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs font-bold text-slate-200 hover:text-brand-accent hover:border-brand-accent/50 shadow-none transition-all cursor-help text-center w-full">
                       {company.name}
                     </div>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-48 text-[10px] text-brand-muted leading-relaxed text-center pointer-events-none">
