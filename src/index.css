@@ -5,7 +5,7 @@
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
-  
+
   --color-brand-primary: #3a7d5c;
   --color-brand-bg: #0d0f11;
   --color-brand-card: #14171a;
@@ -20,7 +20,11 @@
 
 @layer base {
   body {
-    @apply bg-brand-bg text-slate-100 font-sans antialiased;
+    background-color: var(--color-brand-bg);
+    color: #f1f5f9;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   * {
     border-color: var(--color-brand-border);
@@ -46,7 +50,7 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply rounded-full;
+  border-radius: 9999px;
   background: rgba(122, 130, 144, 0.3);
 }
 ::-webkit-scrollbar-thumb:hover {

@@ -30,11 +30,25 @@ export async function fetchStatsData() {
     .select('*', { count: 'exact', head: true })
     .eq('is_pinned', 1);
 
+  // Fetch per-thesis target counts for Dashboard cards
+  const { data: thesesData } = await supabase.from('theses').select('id');
+  const thesesStats = [];
+  if (thesesData) {
+    for (const t of thesesData) {
+      const { count } = await supabase
+        .from('targets')
+        .select('*', { count: 'exact', head: true })
+        .eq('thesis_id', t.id);
+      thesesStats.push({ id: t.id, targets_count: count || 0 });
+    }
+  }
+
   return {
     total_theses: totalTheses || 0,
     active_theses: activeTheses || 0,
     total_targets: totalTargets || 0,
     pinned_targets: pinnedTargets || 0,
+    thesesStats,
   };
 }
 
