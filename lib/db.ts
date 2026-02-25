@@ -58,7 +58,6 @@ export async function createThesis(thesis: any) {
 }
 
 export async function deleteThesis(id: string) {
-  // Delete related data first
   const { data: targets } = await supabase
     .from('targets')
     .select('id')
@@ -98,7 +97,6 @@ export async function fetchTargetsByThesis(thesisId: string) {
 }
 
 export async function bulkInsertTargets(thesisId: string, targets: any[]) {
-  // Delete old targets for this thesis first
   const { data: oldTargets } = await supabase
     .from('targets')
     .select('id')

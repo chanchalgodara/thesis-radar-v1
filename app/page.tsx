@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -30,13 +32,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
-import { Thesis, Target as TargetType, DeepDive, generateTargets, refreshSignals, generateDeepDive, interpretThesis, executeSearch, suggestTheses, SuggestedThesis, WorkflowStep, generateMarketMap, MarketMap } from './services/geminiService';
-import * as db from './lib/db';
+import { Thesis, Target as TargetType, DeepDive, generateTargets, refreshSignals, generateDeepDive, interpretThesis, executeSearch, suggestTheses, SuggestedThesis, WorkflowStep, generateMarketMap, MarketMap } from '@/services/geminiService';
+import * as db from '@/lib/db';
 
 // --- Components ---
 
 const Button = ({ children, variant = 'primary', className = '', ...props }: any) => {
-  const variants = {
+  const variants: Record<string, string> = {
     primary: 'bg-brand-primary hover:bg-brand-accent text-white',
     secondary: 'bg-brand-surface hover:bg-brand-hover text-brand-faint border border-brand-border',
     ghost: 'hover:bg-brand-surface text-brand-muted hover:text-slate-200',
@@ -62,7 +64,7 @@ const Card = ({ children, className = '', onClick }: any) => (
 );
 
 const Badge = ({ children, variant = 'default' }: any) => {
-  const variants = {
+  const variants: Record<string, string> = {
     default: 'bg-brand-surface text-brand-muted border border-brand-border',
     strong: 'bg-brand-primary/10 text-brand-accent border border-brand-primary/20',
     moderate: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
@@ -94,7 +96,7 @@ const Dashboard = ({ theses, stats, onNewThesis, onSelectThesis, onDeleteThesis,
   <div className="space-y-12">
     <div className="flex justify-between items-end">
       <div>
-        <h1 className="text-4xl font-display font-bold text-slate-100">Thesis Radar</h1>
+        <h1 className="text-4xl font-display font-bold text-slate-100 text-balance">Thesis Radar</h1>
         <p className="text-brand-muted mt-2">Active M&A theses and market monitoring.</p>
       </div>
       <Button onClick={onNewThesis} className="py-3 px-6 shadow-lg shadow-brand-primary/10">
@@ -224,7 +226,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
               <div className="space-y-2">
                 <h3 className="font-bold text-slate-100">Generate Strategic Opportunities</h3>
                 <p className="text-sm text-brand-muted max-w-xs mx-auto">
-                  Our AI will analyze Vercel's ecosystem and current market trends to suggest high-impact acquisition theses.
+                  Our AI will analyze current market trends to suggest high-impact acquisition theses.
                 </p>
               </div>
               <div className="space-y-6 pt-4">
@@ -232,7 +234,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                   <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Strategic Constraints (Optional)</label>
                   <textarea 
                     className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors resize-none h-24 text-sm text-brand-faint"
-                    placeholder="Suggest focus areas (e.g., 'Focus on companies sharing Vercel's existing customer base', 'Potential new customers', 'Limit on investment < $50M')..."
+                    placeholder="Suggest focus areas (e.g., 'Focus on AI infrastructure', 'Limit on investment < $50M')..."
                     value={strategicConstraints}
                     onChange={e => setStrategicConstraints(e.target.value)}
                   />
@@ -272,7 +274,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                   <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Strategic Constraints (Optional)</label>
                   <textarea 
                     className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors resize-none h-24 text-sm text-brand-faint"
-                    placeholder="Suggest focus areas (e.g., 'Focus on companies sharing Vercel's existing customer base', 'Potential new customers', 'Limit on investment < $50M')..."
+                    placeholder="Suggest focus areas..."
                     value={strategicConstraints}
                     onChange={e => setStrategicConstraints(e.target.value)}
                   />
@@ -321,7 +323,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
 
 const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onTogglePin, onDismiss, onGenerateMarketMap, onAddTarget }: any) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [filter, setFilter] = useState('all'); // all, pinned
+  const [filter, setFilter] = useState('all');
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [showAddTarget, setShowAddTarget] = useState(false);
@@ -425,7 +427,7 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
             {showColumnSettings && (
               <div className="absolute right-0 top-full mt-2 z-50 bg-brand-card border border-brand-border rounded-xl shadow-2xl p-4 w-64 space-y-3" onClick={e => e.stopPropagation()}>
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted mb-2">Visible Columns</h4>
-                <div className="max-h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
                   {allColumns.map(col => (
                     <label key={col.id} className="flex items-center gap-3 cursor-pointer group">
                       <input 
@@ -465,7 +467,7 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" className="text-xs py-1" onClick={() => setShowAddTarget(false)}>Cancel</Button>
-                  <Button className="text-xs py-1" onClick={handleAddTarget} disabled={!newTargetName.trim()}>Research & Add</Button>
+                  <Button className="text-xs py-1" onClick={handleAddTarget} disabled={!newTargetName.trim()}>{'Research & Add'}</Button>
                 </div>
               </div>
             )}
@@ -508,10 +510,6 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                       <span className="font-bold text-slate-100 group-hover/name:text-brand-accent transition-colors">{target.name}</span>
                       <span className="text-xs text-brand-muted line-clamp-1">{target.one_liner}</span>
                     </div>
-                    <div className="absolute left-4 top-full mt-1 hidden group-hover/name:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-64 text-xs text-brand-muted leading-relaxed pointer-events-none">
-                      <p className="font-bold text-slate-100 mb-1">{target.name}</p>
-                      <p>{target.one_liner}</p>
-                    </div>
                   </td>
                 )}
                 {visibleColumns.includes('stage') && (
@@ -528,11 +526,8 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                   </td>
                 )}
                 {visibleColumns.includes('top_signal') && (
-                  <td className="px-4 py-4 relative group/signal">
+                  <td className="px-4 py-4">
                     <span className="text-xs text-brand-muted line-clamp-2 max-w-xs">{target.top_signal}</span>
-                    <div className="absolute left-4 top-full mt-1 hidden group-hover/signal:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-64 text-xs text-brand-muted leading-relaxed pointer-events-none">
-                      {target.top_signal}
-                    </div>
                   </td>
                 )}
                 {visibleColumns.includes('client_overlap_current') && (
@@ -559,36 +554,23 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                   <td className="px-4 py-4 text-xs text-brand-muted max-w-[150px] truncate">{target.current_investors || '-'}</td>
                 )}
                 <td className="px-4 py-4 text-right" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-end gap-2">
-                    <div className="relative">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === target.id ? null : target.id); }}
-                        className="p-2 text-brand-faint hover:text-slate-400"
-                      >
-                        <MoreHorizontal size={16} />
-                      </button>
-                      {activeMenuId === target.id && (
-                        <div className="absolute right-0 top-full mt-1 z-50 bg-brand-card border border-brand-border rounded-lg shadow-2xl w-40 overflow-hidden" onClick={e => e.stopPropagation()}>
-                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-brand-surface text-brand-faint flex items-center gap-2" onClick={() => { 
-                            const headers = ["ID", "Name", "One Liner", "Stage", "Headcount", "Signal Score", "Top Signal", "Fit Rating"];
-                            const row = [target.id, target.name, target.one_liner, target.stage, target.headcount, target.signal_score, target.top_signal, target.fit_rating];
-                            const csvContent = [headers.join(','), row.map(v => `"${v}"`).join(',')].join('\n');
-                            const blob = new Blob([csvContent], { type: 'text/csv' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${target.name}_intel.csv`;
-                            a.click();
-                            setActiveMenuId(null); 
-                          }}>
-                            <Download size={12} /> Export Intelligence (CSV)
-                          </button>
-                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-red-500/10 text-red-400 flex items-center gap-2" onClick={() => { onDismiss(target); setActiveMenuId(null); }}>
-                            <Trash2 size={12} /> Delete Target
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                  <div className="relative">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === target.id ? null : target.id); }}
+                      className="p-2 text-brand-faint hover:text-slate-300 transition-colors"
+                    >
+                      <MoreHorizontal size={16} />
+                    </button>
+                    {activeMenuId === target.id && (
+                      <div className="absolute right-0 top-full z-50 bg-brand-card border border-brand-border rounded-lg shadow-2xl py-1 w-36" onClick={e => e.stopPropagation()}>
+                        <button className="w-full text-left px-3 py-2 text-xs text-brand-muted hover:bg-brand-surface flex items-center gap-2" onClick={() => { onTogglePin(target); setActiveMenuId(null); }}>
+                          <Pin size={12} /> {target.is_pinned ? 'Unpin' : 'Pin'}
+                        </button>
+                        <button className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-brand-surface flex items-center gap-2" onClick={() => { onDismiss(target); setActiveMenuId(null); }}>
+                          <Trash2 size={12} /> Dismiss
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -604,7 +586,7 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
             {dismissedTargets.map((target: TargetType) => (
               <div key={target.id} className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-lg border border-brand-border">
                 <span className="text-sm font-medium text-slate-400">{target.name}</span>
-                <Button variant="ghost" size="sm" onClick={() => onDismiss(target)}>Restore</Button>
+                <Button variant="ghost" onClick={() => onDismiss(target)}>Restore</Button>
               </div>
             ))}
           </div>
@@ -643,14 +625,14 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
     return (
       <ul className={dense ? "space-y-2" : "space-y-4"}>
         {bullets.map((b, i) => {
-          const content = b.replace(/^[-*•\d.]+\s*/, '').replace(/\*\*/g, '');
+          const content = b.replace(/^[-*\u2022\d.]+\s*/, '').replace(/\*\*/g, '');
           const parts = content.split(':');
           const headline = parts.length > 1 ? parts[0] : '';
           const body = parts.length > 1 ? parts.slice(1).join(':') : content;
 
           return (
             <li key={i} className={`flex gap-3 text-slate-400 leading-relaxed ${dense ? 'text-xs' : 'text-sm'}`}>
-              <span className="text-brand-accent shrink-0 mt-1.5">•</span>
+              <span className="text-brand-accent shrink-0 mt-1.5">{'•'}</span>
               <div>
                 {headline && headline.length < 50 && <span className={`font-bold text-slate-100 block ${dense ? 'mb-0.5' : 'mb-1'}`}>{headline}</span>}
                 <span>{headline && headline.length >= 50 ? content : body}</span>
@@ -713,7 +695,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
             <Card className="space-y-4 bg-purple-500/10 border-purple-500/20">
               <h3 className="text-xs font-bold uppercase tracking-widest text-purple-400 flex items-center gap-2">
                 <Plus size={14} />
-                Team & Culture
+                {'Team & Culture'}
               </h3>
               {renderBullets(dive.team, true)}
             </Card>
@@ -770,7 +752,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
             <Card className="space-y-4 bg-red-500/5 border-red-500/20">
               <h3 className="text-xs font-bold uppercase tracking-widest text-red-400 flex items-center gap-2">
                 <ShieldAlert size={14} />
-                Risks & Considerations
+                {'Risks & Considerations'}
               </h3>
               {renderBullets(dive.risks, true)}
             </Card>
@@ -780,7 +762,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
         <div className="space-y-8">
           <Card className="space-y-6 bg-brand-surface/50 border-brand-border">
             <div className="space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Market Maturity & Timing</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">{'Market Maturity & Timing'}</h4>
               {renderBullets(dive.timing)}
             </div>
 
@@ -801,7 +783,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
                       <td className="px-4 py-2 text-brand-muted font-medium">Total Funding</td>
                       <td className="px-4 py-2 text-brand-faint font-mono">
                         {Array.isArray(dive.funding_investors) 
-                          ? (dive.funding_investors.find(s => s.toLowerCase().includes('total funding'))?.split(':')?.[1]?.trim() || 'See details')
+                          ? (dive.funding_investors.find((s: string) => s.toLowerCase().includes('total funding'))?.split(':')?.[1]?.trim() || 'See details')
                           : (dive.funding_investors?.match(/Total Funding:\s*([^\n]+)/)?.[1] || 'See details')
                         }
                       </td>
@@ -812,7 +794,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
             </div>
 
             <div className="pt-6 border-t border-brand-border space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Funding & Investors</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">{'Funding & Investors'}</h4>
               <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
                 {renderBullets(dive.funding_investors, true)}
               </div>
@@ -838,7 +820,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
           </Card>
 
           <Card className="space-y-4 bg-brand-surface/30 border-brand-border">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted">Investments & Acquisitions</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted">{'Investments & Acquisitions'}</h3>
             <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
               {renderBullets(dive.investments_acquisitions, true)}
             </div>
@@ -856,11 +838,11 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
       <Card className="space-y-4 bg-brand-card border-brand-border">
         <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted flex items-center gap-2">
           <LinkIcon size={14} />
-          Sources & Grounding
+          {'Sources & Grounding'}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {dive.sources?.split('\n').filter((s: string) => s.trim()).map((source: string, i: number) => {
-            const cleanSource = source.replace(/^[-*•\d.]+\s*/, '').trim();
+            const cleanSource = source.replace(/^[-*\u2022\d.]+\s*/, '').trim();
             if (!cleanSource) return null;
             const parts = cleanSource.split(':');
             const label = parts.length > 1 ? parts[0].trim() : cleanSource.split('/').pop() || cleanSource;
@@ -885,7 +867,7 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
   );
 };
 
-const Settings = ({ apiKey, onSaveKey }: any) => {
+const SettingsView = ({ apiKey, onSaveKey }: any) => {
   const [key, setKey] = useState(apiKey || '');
   const [isSaved, setIsSaved] = useState(false);
 
@@ -918,11 +900,6 @@ const Settings = ({ apiKey, onSaveKey }: any) => {
               value={key}
               onChange={e => setKey(e.target.value)}
             />
-            {apiKey && !key && (
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-faint">
-                •••• •••• •••• {apiKey.slice(-4)}
-              </div>
-            )}
           </div>
           <p className="text-xs text-brand-muted">
             Your key is stored locally in your browser and used only for requests to Google Gemini.
@@ -954,24 +931,24 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
     calibration.signals.reduce((acc: any, _: any, i: number) => ({ ...acc, [i]: 'Medium' }), {})
   );
 
-  const handleUpdate = (updates: any) => {
+  const handleUpdateData = (updates: any) => {
     setData((prev: any) => ({ ...prev, ...updates }));
   };
 
   const handleParamUpdate = (key: string, value: string) => {
-    handleUpdate({ parameters: { ...data.parameters, [key]: value } });
+    handleUpdateData({ parameters: { ...data.parameters, [key]: value } });
   };
 
   const toggleSignal = (signal: string) => {
     const newSignals = data.signals.includes(signal)
       ? data.signals.filter((s: string) => s !== signal)
       : [...data.signals, signal];
-    handleUpdate({ signals: newSignals });
+    handleUpdateData({ signals: newSignals });
   };
 
   const addSignal = () => {
     if (newSignal.trim()) {
-      handleUpdate({ signals: [...data.signals, newSignal.trim()] });
+      handleUpdateData({ signals: [...data.signals, newSignal.trim()] });
       setSignalPriorities(prev => ({ ...prev, [data.signals.length]: 'Medium' }));
       setNewSignal('');
     }
@@ -984,7 +961,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
   const updateWorkflowStep = (index: number, updates: Partial<WorkflowStep>) => {
     const newWorkflow = [...data.workflow];
     newWorkflow[index] = { ...newWorkflow[index], ...updates };
-    handleUpdate({ workflow: newWorkflow });
+    handleUpdateData({ workflow: newWorkflow });
   };
 
   const updateTask = (stepIndex: number, taskIndex: number, value: string) => {
@@ -992,13 +969,13 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
     const newTasks = [...newWorkflow[stepIndex].tasks];
     newTasks[taskIndex] = value;
     newWorkflow[stepIndex] = { ...newWorkflow[stepIndex], tasks: newTasks };
-    handleUpdate({ workflow: newWorkflow });
+    handleUpdateData({ workflow: newWorkflow });
   };
 
   const addTask = (stepIndex: number) => {
     const newWorkflow = [...data.workflow];
     newWorkflow[stepIndex].tasks.push('New task...');
-    handleUpdate({ workflow: newWorkflow });
+    handleUpdateData({ workflow: newWorkflow });
   };
 
   return (
@@ -1014,7 +991,6 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Strategy & Parameters (Col 5) */}
         <div className="lg:col-span-5 space-y-8">
           <section className="space-y-4">
             <div className="flex items-center justify-between">
@@ -1035,7 +1011,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
             <textarea 
               className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-4 focus:outline-none focus:border-brand-accent transition-colors resize-none text-brand-faint leading-relaxed h-64 shadow-none font-sans text-sm"
               value={data.market_context}
-              onChange={e => handleUpdate({ market_context: e.target.value })}
+              onChange={e => handleUpdateData({ market_context: e.target.value })}
             />
           </section>
 
@@ -1080,7 +1056,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
           <section className="space-y-4">
             <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Evaluation Signals</label>
             <div className="bg-brand-card border border-brand-border rounded-2xl p-6 space-y-4 shadow-none">
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {data.signals.map((signal: string, i: number) => {
                   const parts = signal.split(':');
                   const category = parts.length > 1 ? parts[0].trim() : '';
@@ -1101,7 +1077,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                             onChange={e => {
                               const newSignals = [...data.signals];
                               newSignals[i] = e.target.value;
-                              handleUpdate({ signals: newSignals });
+                              handleUpdateData({ signals: newSignals });
                             }}
                           />
                         </div>
@@ -1117,7 +1093,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                           <option value="Low">Low</option>
                         </select>
                         <button 
-                          onClick={() => handleUpdate({ signals: data.signals.filter((_: any, idx: number) => idx !== i) })}
+                          onClick={() => handleUpdateData({ signals: data.signals.filter((_: any, idx: number) => idx !== i) })}
                           className="text-brand-faint hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Trash2 size={14} />
@@ -1135,7 +1111,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                   onChange={e => setNewSignal(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addSignal()}
                 />
-                <Button variant="secondary" size="sm" onClick={addSignal}>
+                <Button variant="secondary" onClick={addSignal}>
                   <Plus size={14} />
                 </Button>
               </div>
@@ -1143,7 +1119,6 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
           </section>
         </div>
 
-        {/* Right Column: Workflow Configuration (Col 7) */}
         <div className="lg:col-span-7 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-display font-bold text-slate-100">Agent Workflow Configuration</h2>
@@ -1196,7 +1171,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                         </button>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
-                        {step.tasks.map((task, tIdx) => (
+                        {step.tasks.map((task: string, tIdx: number) => (
                           <div key={tIdx} className="flex items-center gap-3 bg-brand-surface/50 p-2 rounded-lg border border-brand-border/50 group">
                             <div className="w-5 h-5 rounded bg-brand-card border border-brand-border/50 flex items-center justify-center text-[10px] font-mono text-brand-faint">
                               {String.fromCharCode(97 + tIdx)}
@@ -1254,7 +1229,6 @@ const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
       </div>
 
       <div className="bg-brand-card border border-brand-border p-8 rounded-3xl shadow-xl relative overflow-hidden min-h-[600px]">
-        {/* Background decoration */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
         
@@ -1294,9 +1268,9 @@ const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
 
 // --- Main App ---
 
-export default function App() {
+export default function Page() {
   const [view, setView] = useState<'dashboard' | 'editor' | 'calibration' | 'watchlist' | 'deepdive' | 'settings' | 'marketmap'>('dashboard');
-  const [apiKey, setApiKey] = useState<string>(localStorage.getItem('gemini_api_key') || '');
+  const [apiKey, setApiKey] = useState<string>('');
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [selectedThesis, setSelectedThesis] = useState<Thesis | null>(null);
   const [calibrationData, setCalibrationData] = useState<any>(null);
@@ -1311,6 +1285,7 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
+    setApiKey(localStorage.getItem('gemini_api_key') || '');
     fetchTheses();
     fetchStats();
   }, []);
@@ -1384,18 +1359,15 @@ export default function App() {
 
   const handleExecuteSearch = async (finalCalibration: any) => {
     if (!selectedThesis || !apiKey) return;
-    
     setIsLoading(true);
-    // Extract steps from structured workflow for the loading screen
+
     const steps = finalCalibration.workflow.map((s: WorkflowStep) => s.title);
-    
     setLoadingSteps(steps);
     setCurrentLoadingStep(0);
 
-    // Simulate step progression for UX
     const interval = setInterval(() => {
-      setCurrentLoadingStep(prev => (prev + 1) % steps.length);
-    }, 4000);
+      setCurrentLoadingStep(prev => Math.min(prev + 1, steps.length - 1));
+    }, 8000);
 
     try {
       const generatedTargets = await executeSearch(apiKey, finalCalibration);
@@ -1451,7 +1423,6 @@ export default function App() {
     setCurrentLoadingStep(0);
 
     try {
-      // We'll use generateTargets but for a single company name
       const prompt = `Research the company "${name}" specifically for the M&A thesis: "${selectedThesis.title}: ${selectedThesis.description}".
       Identify if they are a match. If so, provide their details.
       
@@ -1463,7 +1434,7 @@ export default function App() {
       - fit_rating: Strong, Moderate, or Weak
       - signal_score: 0-100
       - top_signal: A short, punchy sentence.
-      - client_overlap_current: Estimate overlap with Vercel's customer base.
+      - client_overlap_current: Estimate overlap with customer base.
       - client_overlap_potential: Estimate future overlap.
       - product_rating: A descriptive rating.
       - product_score: 0-100.
@@ -1512,7 +1483,6 @@ export default function App() {
       };
 
       await db.insertTarget(newTarget);
-
       await fetchTargets(selectedThesis.id);
     } catch (error) {
       console.error("Failed to add target", error);
@@ -1678,10 +1648,7 @@ export default function App() {
                     <motion.div 
                       key={i}
                       initial={{ opacity: 0, x: -20 }}
-                      animate={{ 
-                        opacity: 1, 
-                        x: 0,
-                      }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.1 }}
                       className="p-4 rounded-xl border border-brand-border bg-brand-card flex items-center gap-6 relative overflow-hidden group shadow-none"
                     >
@@ -1689,11 +1656,8 @@ export default function App() {
                         <span className="text-[10px] font-mono font-bold text-brand-faint uppercase tracking-widest w-12">Step {i+1}</span>
                         <RefreshCw size={18} className="text-brand-accent animate-spin" />
                       </div>
-
                       <div className="flex-grow">
-                        <h4 className="font-bold text-slate-100">
-                          {step}
-                        </h4>
+                        <h4 className="font-bold text-slate-100">{step}</h4>
                       </div>
                     </motion.div>
                   ))}
@@ -1781,7 +1745,7 @@ export default function App() {
                 />
               )}
               {view === 'settings' && (
-                <Settings apiKey={apiKey} onSaveKey={handleSaveKey} />
+                <SettingsView apiKey={apiKey} onSaveKey={handleSaveKey} />
               )}
             </motion.div>
           )}

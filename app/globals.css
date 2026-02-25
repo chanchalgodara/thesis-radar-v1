@@ -1,7 +1,6 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
-@theme {
+@theme inline {
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -41,7 +40,6 @@
 .signal-yellow { color: #c8952e; background: rgba(200, 149, 46, 0.1); border-color: rgba(200, 149, 46, 0.2); }
 .signal-green { color: #4a9d70; background: rgba(74, 157, 112, 0.1); border-color: rgba(74, 157, 112, 0.2); }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
