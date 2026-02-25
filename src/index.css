@@ -1,38 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-display: "Playfair Display", serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
   
-  --color-brand-primary: #059669; /* Emerald 600 */
-  --color-brand-bg: #f8fafc; /* Slate 50 */
-  --color-brand-card: #ffffff;
-  --color-brand-border: #e2e8f0; /* Slate 200 */
+  --color-brand-primary: #3a7d5c;
+  --color-brand-bg: #0d0f11;
+  --color-brand-card: #14171a;
+  --color-brand-border: #2a2e33;
+  --color-brand-surface: #1a1d21;
+  --color-brand-hover: #1e2227;
+  --color-brand-accent: #4a9d70;
+  --color-brand-accent-bg: rgba(58, 125, 92, 0.1);
+  --color-brand-muted: #7a8290;
+  --color-brand-faint: #4a5060;
 }
 
 @layer base {
   body {
-    @apply bg-brand-bg text-slate-900 font-sans antialiased;
+    @apply bg-brand-bg text-slate-100 font-sans antialiased;
+  }
+  * {
+    border-color: var(--color-brand-border);
   }
 }
 
 .glass {
-  @apply bg-white/80 backdrop-blur-md border border-slate-200;
+  background: rgba(20, 23, 26, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-brand-border);
 }
 
-.signal-red { @apply text-red-600 bg-red-50 border-red-100; }
-.signal-yellow { @apply text-amber-600 bg-amber-50 border-amber-100; }
-.signal-green { @apply text-emerald-600 bg-emerald-50 border-emerald-100; }
+.signal-red { color: #d04848; background: rgba(208, 72, 72, 0.1); border-color: rgba(208, 72, 72, 0.2); }
+.signal-yellow { color: #c8952e; background: rgba(200, 149, 46, 0.1); border-color: rgba(200, 149, 46, 0.2); }
+.signal-green { color: #4a9d70; background: rgba(74, 157, 112, 0.1); border-color: rgba(74, 157, 112, 0.2); }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-brand-bg;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  @apply rounded-full;
+  background: rgba(122, 130, 144, 0.3);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 130, 144, 0.5);
 }

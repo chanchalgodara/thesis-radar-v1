@@ -467,37 +467,21 @@ Be honest about uncertainty.`;
 
 export const generateDeepDive = async (apiKey: string, thesis: Thesis, target: Target): Promise<DeepDive> => {
   const ai = getAI(apiKey);
-  const prompt = `Generate a deep dive M&A analysis for ${target.name}.
-Context: Our strategic thesis is "${thesis.title}: ${thesis.description}".
+  const context = `M&A deep dive for ${target.name}. Thesis: "${thesis.title}: ${thesis.description}". CRITICAL: NO PARAGRAPHS. Every section must be concise bullet points. Be a senior M&A analyst. Be pragmatic and opinionated.`;
 
-CRITICAL: NO PARAGRAPHS. Every section must be a list of concise, high-impact bullet points.
-Each bullet point should be a single sentence or a short phrase.
-For sections like "Strategic Fit", break down complex ideas into multiple small bullets (e.g., "Compliance bridge", "Secure by default framework").
-For "Founders", use the format: "Name (Role/Background, ex-Company)".
+  const callA = ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: [{ parts: [{ text: `${context}
 
-Provide a detailed analysis in the following sections:
+Sections:
 1. Overview: 2-3 bullets on what they do, founding year, location, key product.
 2. Strategic Fit: 4-6 focused bullets on why this acquisition makes sense.
 3. Team: 2-3 bullets on key people (founders, CTO, notable engineers).
 4. Product & Technology: 3-5 bullets on what they've built, tech stack, open source presence.
-5. Financials (Estimated): 2-3 bullets on revenue range, last known funding, estimated burn.
-6. Timing Assessment: 2-3 bullets on market maturity and why now is the right time.
-7. Risks: 3-4 bullets on integration complexity, team retention, tech overlap.
-8. Comparable Transactions: 2-3 bullets on recent acquisitions in this space.
-9. Funding and Investors: Bullets on total funding, last round, and key investors.
-10. Founders: Bullets on founder backgrounds and current roles.
-11. Competitors: A list of 5 direct and indirect competitors with details for a table.
-12. Latest Cap Table and Shareholding: Estimated breakdown of ownership.
-13. Investments and Acquisitions: Any companies they have acquired or invested in.
-14. Tech Stack: Detailed bullets on their infrastructure, languages, and tools.
-15. Product Alignment Signals: Specific signals indicating how their product aligns with Vercel's roadmap.
-16. Sources: A list of 3-5 real or highly probable source URLs.
-
-Be a senior M&A analyst. Be pragmatic and opinionated.`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: [{ parts: [{ text: prompt }] }],
+5. Timing Assessment: 2-3 bullets on market maturity and why now is the right time.
+6. Risks: 3-4 bullets on integration complexity, team retention, tech overlap.
+7. Product Alignment Signals: Specific signals indicating how their product aligns with Vercel's roadmap.
+8. Founders: Bullets on founder backgrounds and current roles. Format: "Name (Role/Background, ex-Company)".` }] }],
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -507,13 +491,37 @@ Be a senior M&A analyst. Be pragmatic and opinionated.`;
           strategic_fit: { type: Type.ARRAY, items: { type: Type.STRING } },
           team: { type: Type.ARRAY, items: { type: Type.STRING } },
           product_tech: { type: Type.ARRAY, items: { type: Type.STRING } },
-          financials: { type: Type.ARRAY, items: { type: Type.STRING } },
           timing: { type: Type.ARRAY, items: { type: Type.STRING } },
           risks: { type: Type.ARRAY, items: { type: Type.STRING } },
-          comparables: { type: Type.ARRAY, items: { type: Type.STRING } },
-          sources: { type: Type.STRING },
-          funding_investors: { type: Type.ARRAY, items: { type: Type.STRING } },
+          product_alignment_signals: { type: Type.ARRAY, items: { type: Type.STRING } },
           founders: { type: Type.ARRAY, items: { type: Type.STRING } },
+        },
+        required: ["overview", "strategic_fit", "team", "product_tech", "timing", "risks", "product_alignment_signals", "founders"],
+      },
+    },
+  });
+
+  const callB = ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: [{ parts: [{ text: `${context}
+
+Sections:
+1. Financials (Estimated): 2-3 bullets on revenue range, last known funding, estimated burn.
+2. Comparable Transactions: 2-3 bullets on recent acquisitions in this space.
+3. Funding and Investors: Bullets on total funding, last round, and key investors.
+4. Competitors: A list of 5 direct and indirect competitors with details for a table.
+5. Latest Cap Table and Shareholding: Estimated breakdown of ownership.
+6. Investments and Acquisitions: Any companies they have acquired or invested in.
+7. Tech Stack: Detailed bullets on their infrastructure, languages, and tools.
+8. Sources: A list of 3-5 real or highly probable source URLs.` }] }],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          financials: { type: Type.ARRAY, items: { type: Type.STRING } },
+          comparables: { type: Type.ARRAY, items: { type: Type.STRING } },
+          funding_investors: { type: Type.ARRAY, items: { type: Type.STRING } },
           competitors: { 
             type: Type.ARRAY, 
             items: {
@@ -531,17 +539,16 @@ Be a senior M&A analyst. Be pragmatic and opinionated.`;
           },
           cap_table_shareholding: { type: Type.ARRAY, items: { type: Type.STRING } },
           investments_acquisitions: { type: Type.ARRAY, items: { type: Type.STRING } },
-          product_alignment_signals: { type: Type.ARRAY, items: { type: Type.STRING } },
+          sources: { type: Type.STRING },
         },
-        required: [
-          "overview", "strategic_fit", "team", "product_tech", "financials", 
-          "timing", "risks", "comparables", "sources", "funding_investors",
-          "founders", "competitors", "cap_table_shareholding", 
-          "investments_acquisitions", "product_alignment_signals"
-        ],
+        required: ["financials", "comparables", "funding_investors", "competitors", "cap_table_shareholding", "investments_acquisitions", "sources"],
       },
     },
   });
 
-  return JSON.parse(response.text || "{}");
+  const [resA, resB] = await Promise.all([callA, callB]);
+  const partA = JSON.parse(resA.text || "{}");
+  const partB = JSON.parse(resB.text || "{}");
+
+  return { ...partA, ...partB };
 };

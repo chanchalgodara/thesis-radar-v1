@@ -36,10 +36,10 @@ import { Thesis, Target as TargetType, DeepDive, generateTargets, refreshSignals
 
 const Button = ({ children, variant = 'primary', className = '', ...props }: any) => {
   const variants = {
-    primary: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm',
-    secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm',
-    ghost: 'hover:bg-slate-100 text-slate-500 hover:text-slate-900',
-    danger: 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200',
+    primary: 'bg-brand-primary hover:bg-brand-accent text-white',
+    secondary: 'bg-brand-surface hover:bg-brand-hover text-brand-faint border border-brand-border',
+    ghost: 'hover:bg-brand-surface text-brand-muted hover:text-slate-200',
+    danger: 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20',
   };
   return (
     <button 
@@ -54,7 +54,7 @@ const Button = ({ children, variant = 'primary', className = '', ...props }: any
 const Card = ({ children, className = '', onClick }: any) => (
   <div 
     onClick={onClick}
-    className={`bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 hover:shadow-md transition-all ${onClick ? 'cursor-pointer' : ''} ${className}`}
+    className={`bg-brand-card border border-brand-border rounded-xl p-6 hover:border-brand-muted/30 transition-all ${onClick ? 'cursor-pointer' : ''} ${className}`}
   >
     {children}
   </div>
@@ -62,10 +62,10 @@ const Card = ({ children, className = '', onClick }: any) => (
 
 const Badge = ({ children, variant = 'default' }: any) => {
   const variants = {
-    default: 'bg-slate-100 text-slate-600',
-    strong: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-    moderate: 'bg-amber-50 text-amber-700 border border-amber-100',
-    weak: 'bg-red-50 text-red-700 border border-red-100',
+    default: 'bg-brand-surface text-brand-muted border border-brand-border',
+    strong: 'bg-brand-primary/10 text-brand-accent border border-brand-primary/20',
+    moderate: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+    weak: 'bg-red-500/10 text-red-400 border border-red-500/20',
   };
   return (
     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${variants[variant as keyof typeof variants]}`}>
@@ -75,14 +75,14 @@ const Badge = ({ children, variant = 'default' }: any) => {
 };
 
 const SignalIndicator = ({ score }: { score: number }) => {
-  let colorClass = 'bg-emerald-500';
-  if (score >= 80) colorClass = 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]';
-  else if (score >= 50) colorClass = 'bg-yellow-500';
+  let colorClass = 'bg-brand-accent';
+  if (score >= 80) colorClass = 'bg-red-400 shadow-[0_0_10px_rgba(208,72,72,0.4)]';
+  else if (score >= 50) colorClass = 'bg-amber-400';
   
   return (
     <div className="flex items-center gap-2">
       <div className={`w-2 h-2 rounded-full ${colorClass}`} />
-      <span className="font-mono font-medium">{score}</span>
+      <span className="font-mono font-medium text-slate-200">{score}</span>
     </div>
   );
 };
@@ -93,23 +93,23 @@ const Dashboard = ({ theses, stats, onNewThesis, onSelectThesis, onDeleteThesis,
   <div className="space-y-12">
     <div className="flex justify-between items-end">
       <div>
-        <h1 className="text-4xl font-display font-bold text-slate-900">Thesis Radar</h1>
-        <p className="text-slate-500 mt-2">Active M&A theses and market monitoring.</p>
+        <h1 className="text-4xl font-display font-bold text-slate-100">Thesis Radar</h1>
+        <p className="text-brand-muted mt-2">Active M&A theses and market monitoring.</p>
       </div>
-      <Button onClick={onNewThesis} className="py-3 px-6 shadow-lg shadow-emerald-500/10">
+      <Button onClick={onNewThesis} className="py-3 px-6 shadow-lg shadow-brand-primary/10">
         <Plus size={20} />
         New Thesis
       </Button>
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card className="flex flex-col gap-1 bg-blue-50/50 border-blue-100">
-        <span className="text-xs text-blue-600 uppercase tracking-widest font-bold">Active Theses</span>
-        <span className="text-3xl font-mono text-blue-900">{theses.filter((t: any) => t.is_active).length}</span>
+      <Card className="flex flex-col gap-1 bg-blue-500/10 border-blue-500/20">
+        <span className="text-xs text-blue-400 uppercase tracking-widest font-bold">Active Theses</span>
+        <span className="text-3xl font-mono text-blue-300">{theses.filter((t: any) => t.is_active).length}</span>
       </Card>
-      <Card className="flex flex-col gap-1 bg-purple-50/50 border-purple-100">
-        <span className="text-xs text-purple-600 uppercase tracking-widest font-bold">Tracked Targets</span>
-        <span className="text-3xl font-mono text-purple-900">{stats?.total_targets || 0}</span>
+      <Card className="flex flex-col gap-1 bg-purple-500/10 border-purple-500/20">
+        <span className="text-xs text-purple-400 uppercase tracking-widest font-bold">Tracked Targets</span>
+        <span className="text-3xl font-mono text-purple-300">{stats?.total_targets || 0}</span>
       </Card>
     </div>
 
@@ -121,29 +121,29 @@ const Dashboard = ({ theses, stats, onNewThesis, onSelectThesis, onDeleteThesis,
             <div className="absolute top-4 right-4 flex gap-2">
               <button 
                 onClick={(e) => { e.stopPropagation(); onToggleStatus(thesis.id); }}
-                className={`p-2 rounded-lg transition-all ${thesis.is_active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                className={`p-2 rounded-lg transition-all ${thesis.is_active ? 'text-brand-accent hover:bg-brand-primary/10' : 'text-brand-faint hover:bg-brand-surface'}`}
                 title={thesis.is_active ? 'Deactivate Thesis' : 'Activate Thesis'}
               >
                 {thesis.is_active ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); onDeleteThesis(thesis.id); }}
-                className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                className="p-2 text-brand-faint hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
               >
                 <Trash2 size={16} />
               </button>
             </div>
             <div className="flex flex-col h-full">
-              <h3 className="text-lg font-bold mb-2 group-hover:text-emerald-600 transition-colors pr-16 text-slate-900">{thesis.title}</h3>
-              <p className="text-slate-500 text-sm line-clamp-3 mb-6 flex-grow">{thesis.description}</p>
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+              <h3 className="text-lg font-bold mb-2 group-hover:text-brand-accent transition-colors pr-16 text-slate-100">{thesis.title}</h3>
+              <p className="text-brand-muted text-sm line-clamp-3 mb-6 flex-grow">{thesis.description}</p>
+              <div className="flex justify-between items-center pt-4 border-t border-brand-border/50">
                 <div className="flex gap-6">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Targets</span>
-                    <span className="text-sm font-mono text-slate-700">{thesisStats?.targets_count || 0}</span>
+                    <span className="text-[10px] text-brand-faint uppercase font-bold">Targets</span>
+                    <span className="text-sm font-mono text-brand-faint">{thesisStats?.targets_count || 0}</span>
                   </div>
                 </div>
-                <ChevronRight size={20} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                <ChevronRight size={20} className="text-brand-faint group-hover:text-brand-accent transition-colors" />
               </div>
             </div>
           </Card>
@@ -164,13 +164,17 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
   });
 
   const handleSuggest = async () => {
-    if (!apiKey) return;
+    if (!apiKey) {
+      alert('Please add your Gemini API key in Settings first.');
+      return;
+    }
     setIsSuggesting(true);
     try {
       const data = await suggestTheses(apiKey, strategicConstraints);
       setSuggestions(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to suggest theses", error);
+      alert(`Failed to generate suggestions: ${error?.message || error}`);
     } finally {
       setIsSuggesting(false);
     }
@@ -186,24 +190,24 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-slate-900">New Strategic Thesis</h1>
-          <p className="text-slate-500 text-sm">Define a new area of interest or let AI suggest high-impact opportunities.</p>
+          <h1 className="text-2xl font-display font-bold text-slate-100">New Strategic Thesis</h1>
+          <p className="text-brand-muted text-sm">Define a new area of interest or let AI suggest high-impact opportunities.</p>
         </div>
         <Button variant="ghost" onClick={onCancel}>
           <X size={20} />
         </Button>
       </div>
 
-      <div className="flex gap-4 border-b border-slate-200 pb-4">
+      <div className="flex gap-4 border-b border-brand-border pb-4">
         <button 
           onClick={() => setMode('selection')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'selection' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'selection' ? 'bg-brand-card text-slate-100 shadow-none' : 'text-brand-muted hover:text-brand-faint'}`}
         >
           AI Suggestions
         </button>
         <button 
           onClick={() => setMode('manual')}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'manual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'manual' ? 'bg-brand-card text-slate-100 shadow-none' : 'text-brand-muted hover:text-brand-faint'}`}
         >
           Create Myself
         </button>
@@ -212,21 +216,21 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
       {mode === 'selection' ? (
         <div className="space-y-6">
           {suggestions.length === 0 ? (
-            <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-12 text-center space-y-4">
-              <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border border-emerald-100">
-                <Sparkles size={24} className="text-emerald-600" />
+            <div className="bg-brand-surface border border-dashed border-brand-border rounded-2xl p-12 text-center space-y-4">
+              <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto border border-brand-primary/20">
+                <Sparkles size={24} className="text-brand-accent" />
               </div>
               <div className="space-y-2">
-                <h3 className="font-bold text-slate-900">Generate Strategic Opportunities</h3>
-                <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                <h3 className="font-bold text-slate-100">Generate Strategic Opportunities</h3>
+                <p className="text-sm text-brand-muted max-w-xs mx-auto">
                   Our AI will analyze Vercel's ecosystem and current market trends to suggest high-impact acquisition theses.
                 </p>
               </div>
               <div className="space-y-6 pt-4">
                 <div className="space-y-2 text-left">
-                  <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Strategic Constraints (Optional)</label>
+                  <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Strategic Constraints (Optional)</label>
                   <textarea 
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 transition-colors resize-none h-24 text-sm text-slate-700"
+                    className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors resize-none h-24 text-sm text-brand-faint"
                     placeholder="Suggest focus areas (e.g., 'Focus on companies sharing Vercel's existing customer base', 'Potential new customers', 'Limit on investment < $50M')..."
                     value={strategicConstraints}
                     onChange={e => setStrategicConstraints(e.target.value)}
@@ -243,35 +247,35 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                 {suggestions.map((s, i) => (
                   <Card 
                     key={i} 
-                    className="group hover:border-emerald-500/50 cursor-pointer transition-all bg-white border-slate-200"
+                    className="group hover:border-brand-accent/50 cursor-pointer transition-all bg-brand-card border-brand-border"
                     onClick={() => onSave({ title: s.title, description: s.description })}
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{s.title}</h3>
+                      <h3 className="text-lg font-bold text-slate-100 group-hover:text-brand-accent transition-colors">{s.title}</h3>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold">Relevance</span>
-                        <span className="text-sm font-mono text-emerald-600 font-bold">{s.relevance_score}%</span>
+                        <span className="text-[10px] text-brand-faint uppercase font-bold">Relevance</span>
+                        <span className="text-sm font-mono text-brand-accent font-bold">{s.relevance_score}%</span>
                       </div>
                     </div>
-                    <p className="text-slate-500 text-sm mb-4 leading-relaxed">{s.description}</p>
-                    <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg">
-                      <p className="text-[10px] text-emerald-600 uppercase font-bold mb-1">AI Rationale</p>
-                      <p className="text-xs text-slate-500 italic">{s.rationale}</p>
+                    <p className="text-brand-muted text-sm mb-4 leading-relaxed">{s.description}</p>
+                    <div className="bg-brand-primary/10 border border-brand-primary/20 p-3 rounded-lg">
+                      <p className="text-[10px] text-brand-accent uppercase font-bold mb-1">AI Rationale</p>
+                      <p className="text-xs text-brand-muted italic">{s.rationale}</p>
                     </div>
                   </Card>
                 ))}
               </div>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-6">
+              <div className="bg-brand-surface border border-brand-border rounded-2xl p-6 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Strategic Constraints (Optional)</label>
+                  <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Strategic Constraints (Optional)</label>
                   <textarea 
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 transition-colors resize-none h-24 text-sm text-slate-700"
+                    className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors resize-none h-24 text-sm text-brand-faint"
                     placeholder="Suggest focus areas (e.g., 'Focus on companies sharing Vercel's existing customer base', 'Potential new customers', 'Limit on investment < $50M')..."
                     value={strategicConstraints}
                     onChange={e => setStrategicConstraints(e.target.value)}
                   />
-                  <p className="text-[10px] text-slate-400 italic">These constraints help narrow down the AI's strategic suggestions.</p>
+                  <p className="text-[10px] text-brand-faint italic">These constraints help narrow down the AI's strategic suggestions.</p>
                 </div>
                 <Button variant="secondary" onClick={handleSuggest} disabled={isSuggesting} className="w-full">
                   <RefreshCw size={16} className={isSuggesting ? 'animate-spin' : ''} />
@@ -282,11 +286,11 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
           )}
         </div>
       ) : (
-        <Card className="space-y-6 bg-white border-slate-200">
+        <Card className="space-y-6 bg-brand-card border-brand-border">
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Thesis Title</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Thesis Title</label>
             <input 
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 transition-colors text-slate-900"
+              className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors text-slate-100"
               placeholder="e.g., Edge Database Expansion"
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -294,9 +298,9 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Strategic Description</label>
+            <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Strategic Description</label>
             <textarea 
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-4 focus:outline-none focus:border-emerald-500 transition-colors resize-none h-40 shadow-inner text-slate-700 leading-relaxed"
+              className="w-full bg-brand-surface border border-brand-border rounded-xl px-4 py-4 focus:outline-none focus:border-brand-accent transition-colors resize-none h-40 shadow-none text-brand-faint leading-relaxed"
               placeholder="Describe the strategic rationale for this acquisition area..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -384,8 +388,8 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
             <ChevronRight size={20} className="rotate-180" />
           </Button>
           <div>
-            <h1 className="text-2xl font-display font-bold text-slate-900">{thesis.title}</h1>
-            <p className="text-slate-500 text-sm max-w-2xl line-clamp-1">{thesis.description}</p>
+            <h1 className="text-2xl font-display font-bold text-slate-100">{thesis.title}</h1>
+            <p className="text-brand-muted text-sm max-w-2xl line-clamp-1">{thesis.description}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -396,17 +400,17 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
         </div>
       </div>
 
-      <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+      <div className="flex justify-between items-center border-b border-brand-border pb-4">
         <div className="flex gap-2">
           <button 
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'all' ? 'bg-brand-card text-slate-100 shadow-none' : 'text-brand-muted hover:text-brand-faint'}`}
           >
             All Targets ({targets.filter((t: any) => !t.is_dismissed).length})
           </button>
           <button 
             onClick={() => setFilter('pinned')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'pinned' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filter === 'pinned' ? 'bg-brand-card text-slate-100 shadow-none' : 'text-brand-muted hover:text-brand-faint'}`}
           >
             Pinned
           </button>
@@ -418,8 +422,8 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
               Columns
             </Button>
             {showColumnSettings && (
-              <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-xl shadow-2xl p-4 w-64 space-y-3" onClick={e => e.stopPropagation()}>
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Visible Columns</h4>
+              <div className="absolute right-0 top-full mt-2 z-50 bg-brand-card border border-brand-border rounded-xl shadow-2xl p-4 w-64 space-y-3" onClick={e => e.stopPropagation()}>
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted mb-2">Visible Columns</h4>
                 <div className="max-h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                   {allColumns.map(col => (
                     <label key={col.id} className="flex items-center gap-3 cursor-pointer group">
@@ -427,9 +431,9 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                         type="checkbox" 
                         checked={visibleColumns.includes(col.id)}
                         onChange={() => toggleColumn(col.id)}
-                        className="w-4 h-4 rounded border-slate-300 bg-slate-50 text-emerald-600 focus:ring-emerald-500/20"
+                        className="w-4 h-4 rounded border-brand-border bg-brand-surface text-brand-accent focus:ring-brand-accent/20"
                       />
-                      <span className="text-xs text-slate-500 group-hover:text-slate-900 transition-colors">{col.label}</span>
+                      <span className="text-xs text-brand-muted group-hover:text-slate-100 transition-colors">{col.label}</span>
                     </label>
                   ))}
                 </div>
@@ -446,12 +450,12 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
               Add Target
             </Button>
             {showAddTarget && (
-              <div className="absolute right-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-xl shadow-2xl p-4 w-80 space-y-4" onClick={e => e.stopPropagation()}>
+              <div className="absolute right-0 top-full mt-2 z-50 bg-brand-card border border-brand-border rounded-xl shadow-2xl p-4 w-80 space-y-4" onClick={e => e.stopPropagation()}>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Company Name</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Company Name</label>
                   <input 
                     autoFocus
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors text-slate-900"
+                    className="w-full bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-colors text-slate-100"
                     placeholder="e.g., Supabase, Neon..."
                     value={newTargetName}
                     onChange={e => setNewTargetName(e.target.value)}
@@ -471,7 +475,7 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="text-[10px] uppercase tracking-widest text-slate-500 font-bold border-b border-slate-200">
+            <tr className="text-[10px] uppercase tracking-widest text-brand-muted font-bold border-b border-brand-border">
               <th className="px-4 py-3 w-10"></th>
               {visibleColumns.includes('company') && <th className="px-4 py-3">Company</th>}
               {visibleColumns.includes('stage') && <th className="px-4 py-3">Stage / Size</th>}
@@ -491,20 +495,20 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
             {filteredTargets.map((target: TargetType) => (
               <tr 
                 key={target.id} 
-                className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+                className="group hover:bg-brand-surface/50 transition-colors cursor-pointer"
                 onClick={() => onTargetClick(target)}
               >
                 <td className="px-4 py-4" onClick={e => { e.stopPropagation(); onTogglePin(target); }}>
-                  <Pin size={16} className={`${target.is_pinned ? 'text-emerald-500 fill-emerald-500' : 'text-slate-300 group-hover:text-slate-400'}`} />
+                  <Pin size={16} className={`${target.is_pinned ? 'text-brand-accent fill-brand-accent' : 'text-brand-faint group-hover:text-brand-faint'}`} />
                 </td>
                 {visibleColumns.includes('company') && (
                   <td className="px-4 py-4 relative group/name">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-900 group-hover/name:text-emerald-600 transition-colors">{target.name}</span>
-                      <span className="text-xs text-slate-500 line-clamp-1">{target.one_liner}</span>
+                      <span className="font-bold text-slate-100 group-hover/name:text-brand-accent transition-colors">{target.name}</span>
+                      <span className="text-xs text-brand-muted line-clamp-1">{target.one_liner}</span>
                     </div>
-                    <div className="absolute left-4 top-full mt-1 hidden group-hover/name:block z-50 bg-white border border-slate-200 p-3 rounded-xl shadow-2xl w-64 text-xs text-slate-500 leading-relaxed pointer-events-none">
-                      <p className="font-bold text-slate-900 mb-1">{target.name}</p>
+                    <div className="absolute left-4 top-full mt-1 hidden group-hover/name:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-64 text-xs text-brand-muted leading-relaxed pointer-events-none">
+                      <p className="font-bold text-slate-100 mb-1">{target.name}</p>
                       <p>{target.one_liner}</p>
                     </div>
                   </td>
@@ -512,8 +516,8 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                 {visibleColumns.includes('stage') && (
                   <td className="px-4 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm text-slate-700">{target.stage}</span>
-                      <span className="text-xs text-slate-500">{target.headcount} ppl</span>
+                      <span className="text-sm text-brand-faint">{target.stage}</span>
+                      <span className="text-xs text-brand-muted">{target.headcount} ppl</span>
                     </div>
                   </td>
                 )}
@@ -524,17 +528,17 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                 )}
                 {visibleColumns.includes('top_signal') && (
                   <td className="px-4 py-4 relative group/signal">
-                    <span className="text-xs text-slate-500 line-clamp-2 max-w-xs">{target.top_signal}</span>
-                    <div className="absolute left-4 top-full mt-1 hidden group-hover/signal:block z-50 bg-white border border-slate-200 p-3 rounded-xl shadow-2xl w-64 text-xs text-slate-500 leading-relaxed pointer-events-none">
+                    <span className="text-xs text-brand-muted line-clamp-2 max-w-xs">{target.top_signal}</span>
+                    <div className="absolute left-4 top-full mt-1 hidden group-hover/signal:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-64 text-xs text-brand-muted leading-relaxed pointer-events-none">
                       {target.top_signal}
                     </div>
                   </td>
                 )}
                 {visibleColumns.includes('client_overlap_current') && (
-                  <td className="px-4 py-4 text-xs text-slate-500">{target.client_overlap_current || '-'}</td>
+                  <td className="px-4 py-4 text-xs text-brand-muted">{target.client_overlap_current || '-'}</td>
                 )}
                 {visibleColumns.includes('client_overlap_potential') && (
-                  <td className="px-4 py-4 text-xs text-slate-500">{target.client_overlap_potential || '-'}</td>
+                  <td className="px-4 py-4 text-xs text-brand-muted">{target.client_overlap_potential || '-'}</td>
                 )}
                 {visibleColumns.includes('product_rating') && (
                   <td className="px-4 py-4">
@@ -542,29 +546,29 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                   </td>
                 )}
                 {visibleColumns.includes('product_score') && (
-                  <td className="px-4 py-4 text-sm font-mono text-slate-700">{target.product_score || '-'}</td>
+                  <td className="px-4 py-4 text-sm font-mono text-brand-faint">{target.product_score || '-'}</td>
                 )}
                 {visibleColumns.includes('valuation') && (
-                  <td className="px-4 py-4 text-sm font-mono text-emerald-600">{target.valuation || '-'}</td>
+                  <td className="px-4 py-4 text-sm font-mono text-brand-accent">{target.valuation || '-'}</td>
                 )}
                 {visibleColumns.includes('funding_stage_detail') && (
-                  <td className="px-4 py-4 text-xs text-slate-500">{target.funding_stage_detail || '-'}</td>
+                  <td className="px-4 py-4 text-xs text-brand-muted">{target.funding_stage_detail || '-'}</td>
                 )}
                 {visibleColumns.includes('current_investors') && (
-                  <td className="px-4 py-4 text-xs text-slate-500 max-w-[150px] truncate">{target.current_investors || '-'}</td>
+                  <td className="px-4 py-4 text-xs text-brand-muted max-w-[150px] truncate">{target.current_investors || '-'}</td>
                 )}
                 <td className="px-4 py-4 text-right" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-end gap-2">
                     <div className="relative">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === target.id ? null : target.id); }}
-                        className="p-2 text-slate-400 hover:text-slate-600"
+                        className="p-2 text-brand-faint hover:text-slate-400"
                       >
                         <MoreHorizontal size={16} />
                       </button>
                       {activeMenuId === target.id && (
-                        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-2xl w-40 overflow-hidden" onClick={e => e.stopPropagation()}>
-                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2" onClick={() => { 
+                        <div className="absolute right-0 top-full mt-1 z-50 bg-brand-card border border-brand-border rounded-lg shadow-2xl w-40 overflow-hidden" onClick={e => e.stopPropagation()}>
+                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-brand-surface text-brand-faint flex items-center gap-2" onClick={() => { 
                             const headers = ["ID", "Name", "One Liner", "Stage", "Headcount", "Signal Score", "Top Signal", "Fit Rating"];
                             const row = [target.id, target.name, target.one_liner, target.stage, target.headcount, target.signal_score, target.top_signal, target.fit_rating];
                             const csvContent = [headers.join(','), row.map(v => `"${v}"`).join(',')].join('\n');
@@ -578,7 +582,7 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
                           }}>
                             <Download size={12} /> Export Intelligence (CSV)
                           </button>
-                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2" onClick={() => { onDismiss(target); setActiveMenuId(null); }}>
+                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-red-500/10 text-red-400 flex items-center gap-2" onClick={() => { onDismiss(target); setActiveMenuId(null); }}>
                             <Trash2 size={12} /> Delete Target
                           </button>
                         </div>
@@ -594,11 +598,11 @@ const Watchlist = ({ thesis, targets, onRefresh, onTargetClick, onBack, onToggle
 
       {dismissedTargets.length > 0 && (
         <div className="pt-8 opacity-50">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Graveyard ({dismissedTargets.length})</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-brand-faint mb-4">Graveyard ({dismissedTargets.length})</h3>
           <div className="space-y-2">
             {dismissedTargets.map((target: TargetType) => (
-              <div key={target.id} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg border border-slate-200">
-                <span className="text-sm font-medium text-slate-600">{target.name}</span>
+              <div key={target.id} className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-lg border border-brand-border">
+                <span className="text-sm font-medium text-slate-400">{target.name}</span>
                 <Button variant="ghost" size="sm" onClick={() => onDismiss(target)}>Restore</Button>
               </div>
             ))}
@@ -620,8 +624,8 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
 
   if (!dive) return (
     <div className="flex flex-col items-center justify-center py-20 space-y-4">
-      <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-      <p className="text-slate-500 font-mono text-sm">Conducting deep dive research...</p>
+      <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
+      <p className="text-brand-muted font-mono text-sm">Conducting deep dive research...</p>
     </div>
   );
 
@@ -644,10 +648,10 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
           const body = parts.length > 1 ? parts.slice(1).join(':') : content;
 
           return (
-            <li key={i} className={`flex gap-3 text-slate-600 leading-relaxed ${dense ? 'text-xs' : 'text-sm'}`}>
-              <span className="text-emerald-600 shrink-0 mt-1.5">•</span>
+            <li key={i} className={`flex gap-3 text-slate-400 leading-relaxed ${dense ? 'text-xs' : 'text-sm'}`}>
+              <span className="text-brand-accent shrink-0 mt-1.5">•</span>
               <div>
-                {headline && headline.length < 50 && <span className={`font-bold text-slate-900 block ${dense ? 'mb-0.5' : 'mb-1'}`}>{headline}</span>}
+                {headline && headline.length < 50 && <span className={`font-bold text-slate-100 block ${dense ? 'mb-0.5' : 'mb-1'}`}>{headline}</span>}
                 <span>{headline && headline.length >= 50 ? content : body}</span>
               </div>
             </li>
@@ -666,21 +670,21 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-4xl font-display font-bold text-slate-900">{target.name}</h1>
+              <h1 className="text-4xl font-display font-bold text-slate-100">{target.name}</h1>
               <Badge variant={target.fit_rating.toLowerCase()}>{target.fit_rating} Fit</Badge>
             </div>
-            <p className="text-slate-500 mt-1">{target.one_liner}</p>
+            <p className="text-brand-muted mt-1">{target.one_liner}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="space-y-6 bg-blue-50/30 border-blue-100">
+          <Card className="space-y-6 bg-blue-500/5 border-blue-500/20">
             <div className="space-y-2">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Signal Score Analysis</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Signal Score Analysis</h4>
               <div className="flex items-end gap-2 mb-4">
-                <span className="text-4xl font-mono font-bold text-blue-900">{target.signal_score}</span>
+                <span className="text-4xl font-mono font-bold text-blue-300">{target.signal_score}</span>
                 <span className="text-blue-400 text-sm mb-1">/ 100</span>
               </div>
               {renderBullets(target.top_signal, true)}
@@ -688,15 +692,15 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="space-y-4 bg-emerald-50/50 border-emerald-100">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700 flex items-center gap-2">
+            <Card className="space-y-4 bg-brand-primary/10/50 border-brand-primary/20">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent flex items-center gap-2">
                 <Target size={14} />
                 Strategic Fit
               </h3>
               {renderBullets(dive.strategic_fit, true)}
             </Card>
-            <Card className="space-y-4 bg-indigo-50/50 border-indigo-100">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-700 flex items-center gap-2">
+            <Card className="space-y-4 bg-indigo-500/5 border-indigo-500/20">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-2">
                 <Sparkles size={14} />
                 Product Alignment Signals
               </h3>
@@ -705,15 +709,15 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="space-y-4 bg-purple-50/50 border-purple-100">
+            <Card className="space-y-4 bg-purple-500/10 border-purple-500/20">
               <h3 className="text-xs font-bold uppercase tracking-widest text-purple-700 flex items-center gap-2">
                 <Plus size={14} />
                 Team & Culture
               </h3>
               {renderBullets(dive.team, true)}
             </Card>
-            <Card className="space-y-4 bg-rose-50/50 border-rose-100">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-700 flex items-center gap-2">
+            <Card className="space-y-4 bg-rose-500/5 border-rose-500/20">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-rose-400 flex items-center gap-2">
                 <Sparkles size={14} />
                 Founders
               </h3>
@@ -721,15 +725,15 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
             </Card>
           </div>
 
-          <Card className="space-y-4 bg-white border-slate-200 overflow-hidden">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2 px-6 pt-6">
+          <Card className="space-y-4 bg-brand-card border-brand-border overflow-hidden">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted flex items-center gap-2 px-6 pt-6">
               <TrendingUp size={14} />
               Competitors Landscape
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-[10px] uppercase tracking-widest text-slate-400 font-bold border-b border-slate-100 bg-slate-50/50">
+                  <tr className="text-[10px] uppercase tracking-widest text-brand-faint font-bold border-b border-brand-border/50 bg-brand-surface/50">
                     <th className="px-6 py-3">Rank</th>
                     <th className="px-6 py-3">Company</th>
                     <th className="px-6 py-3">Details</th>
@@ -740,13 +744,13 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {dive.competitors?.map((comp: any, i: number) => (
-                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 text-xs font-mono text-slate-400">{comp.rank}</td>
+                    <tr key={i} className="hover:bg-brand-surface transition-colors">
+                      <td className="px-6 py-4 text-xs font-mono text-brand-faint">{comp.rank}</td>
                       <td className="px-6 py-4 text-xs font-bold text-slate-800">{comp.name}</td>
-                      <td className="px-6 py-4 text-[10px] text-emerald-600 uppercase font-bold">{comp.details}</td>
-                      <td className="px-6 py-4 text-xs text-slate-500 max-w-xs">{comp.description}</td>
-                      <td className="px-6 py-4 text-xs font-mono text-slate-600">{comp.funding}</td>
-                      <td className="px-6 py-4 text-[10px] text-slate-400 max-w-xs truncate">{comp.investors}</td>
+                      <td className="px-6 py-4 text-[10px] text-brand-accent uppercase font-bold">{comp.details}</td>
+                      <td className="px-6 py-4 text-xs text-brand-muted max-w-xs">{comp.description}</td>
+                      <td className="px-6 py-4 text-xs font-mono text-slate-400">{comp.funding}</td>
+                      <td className="px-6 py-4 text-[10px] text-brand-faint max-w-xs truncate">{comp.investors}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -755,15 +759,15 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="space-y-4 bg-amber-50/50 border-amber-100">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 flex items-center gap-2">
+            <Card className="space-y-4 bg-amber-500/5 border-amber-500/20">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-amber-400 flex items-center gap-2">
                 <SettingsIcon size={14} />
                 Tech Stack
               </h3>
               {renderBullets(dive.product_tech, true)}
             </Card>
-            <Card className="space-y-4 bg-red-50/50 border-red-100">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 flex items-center gap-2">
+            <Card className="space-y-4 bg-red-500/5 border-red-500/20">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-red-400 flex items-center gap-2">
                 <ShieldAlert size={14} />
                 Risks & Considerations
               </h3>
@@ -773,28 +777,28 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
         </div>
 
         <div className="space-y-8">
-          <Card className="space-y-6 bg-slate-50/50 border-slate-200">
+          <Card className="space-y-6 bg-brand-surface/50 border-brand-border">
             <div className="space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Market Maturity & Timing</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Market Maturity & Timing</h4>
               {renderBullets(dive.timing)}
             </div>
 
-            <div className="pt-6 border-t border-slate-200 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Key Financials</h4>
-              <div className="bg-white rounded-xl overflow-hidden border border-slate-200">
+            <div className="pt-6 border-t border-brand-border space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Key Financials</h4>
+              <div className="bg-brand-card rounded-xl overflow-hidden border border-brand-border">
                 <table className="w-full text-left text-xs">
                   <tbody className="divide-y divide-slate-100">
                     <tr>
-                      <td className="px-4 py-2 text-slate-500 font-medium">Valuation</td>
-                      <td className="px-4 py-2 text-emerald-600 font-mono font-bold">{target.valuation || 'N/A'}</td>
+                      <td className="px-4 py-2 text-brand-muted font-medium">Valuation</td>
+                      <td className="px-4 py-2 text-brand-accent font-mono font-bold">{target.valuation || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 text-slate-500 font-medium">Stage</td>
-                      <td className="px-4 py-2 text-slate-700">{target.funding_stage_detail || target.stage}</td>
+                      <td className="px-4 py-2 text-brand-muted font-medium">Stage</td>
+                      <td className="px-4 py-2 text-brand-faint">{target.funding_stage_detail || target.stage}</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 text-slate-500 font-medium">Total Funding</td>
-                      <td className="px-4 py-2 text-slate-700 font-mono">
+                      <td className="px-4 py-2 text-brand-muted font-medium">Total Funding</td>
+                      <td className="px-4 py-2 text-brand-faint font-mono">
                         {Array.isArray(dive.funding_investors) 
                           ? (dive.funding_investors.find(s => s.toLowerCase().includes('total funding'))?.split(':')?.[1]?.trim() || 'See details')
                           : (dive.funding_investors?.match(/Total Funding:\s*([^\n]+)/)?.[1] || 'See details')
@@ -806,50 +810,50 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-200 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Funding & Investors</h4>
-              <div className="bg-white p-4 rounded-xl space-y-3 border border-slate-100">
+            <div className="pt-6 border-t border-brand-border space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Funding & Investors</h4>
+              <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
                 {renderBullets(dive.funding_investors, true)}
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-200 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Latest Cap Table</h4>
-              <div className="bg-white p-4 rounded-xl space-y-3 border border-slate-100">
+            <div className="pt-6 border-t border-brand-border space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Latest Cap Table</h4>
+              <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
                 {renderBullets(dive.cap_table_shareholding, true)}
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-200 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Financial Estimates</h4>
-              <div className="bg-white p-4 rounded-xl space-y-3 border border-slate-100">
+            <div className="pt-6 border-t border-brand-border space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-muted">Financial Estimates</h4>
+              <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
                 {renderBullets(dive.financials, true)}
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50 p-2 rounded">
+              <div className="flex items-center gap-2 text-[10px] text-brand-faint bg-brand-surface p-2 rounded">
                 <AlertCircle size={12} />
                 AI ESTIMATED DATA
               </div>
             </div>
           </Card>
 
-          <Card className="space-y-4 bg-slate-50/30 border-slate-200">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">Investments & Acquisitions</h3>
-            <div className="bg-white p-4 rounded-xl space-y-3 border border-slate-100">
+          <Card className="space-y-4 bg-brand-surface/30 border-brand-border">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted">Investments & Acquisitions</h3>
+            <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
               {renderBullets(dive.investments_acquisitions, true)}
             </div>
           </Card>
 
-          <Card className="space-y-4 bg-slate-50/30 border-slate-200">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">Comparable Transactions</h3>
-            <div className="bg-white p-4 rounded-xl space-y-3 border border-slate-100">
+          <Card className="space-y-4 bg-brand-surface/30 border-brand-border">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted">Comparable Transactions</h3>
+            <div className="bg-brand-card p-4 rounded-xl space-y-3 border border-brand-border/50">
               {renderBullets(dive.comparables, true)}
             </div>
           </Card>
         </div>
       </div>
 
-      <Card className="space-y-4 bg-white border-slate-200">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+      <Card className="space-y-4 bg-brand-card border-brand-border">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-brand-muted flex items-center gap-2">
           <LinkIcon size={14} />
           Sources & Grounding
         </h3>
@@ -862,15 +866,15 @@ const DeepDiveView = ({ target, thesis, dive, onBack, onUpdate }: any) => {
             const url = parts.length > 1 ? parts.slice(1).join(':').trim() : cleanSource;
 
             return (
-              <a key={i} href={url.startsWith('http') ? url : `https://google.com/search?q=${encodeURIComponent(url)}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-500/50 hover:bg-white transition-all group">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 group-hover:text-emerald-600 shrink-0 border border-slate-100">
+              <a key={i} href={url.startsWith('http') ? url : `https://google.com/search?q=${encodeURIComponent(url)}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-brand-surface border border-brand-border rounded-xl hover:border-brand-accent/50 hover:bg-brand-card transition-all group">
+                <div className="w-10 h-10 bg-brand-card rounded-lg flex items-center justify-center text-brand-faint group-hover:text-brand-accent shrink-0 border border-brand-border/50">
                   <FileText size={20} />
                 </div>
                 <div className="flex-grow min-w-0">
-                  <p className="text-xs font-bold text-slate-700 truncate group-hover:text-slate-900">{label}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{url}</p>
+                  <p className="text-xs font-bold text-brand-faint truncate group-hover:text-slate-100">{label}</p>
+                  <p className="text-[10px] text-brand-faint truncate">{url}</p>
                 </div>
-                <ExternalLink size={14} className="ml-auto text-slate-300 group-hover:text-emerald-500" />
+                <ExternalLink size={14} className="ml-auto text-brand-faint group-hover:text-brand-accent" />
               </a>
             );
           })}
@@ -893,15 +897,15 @@ const Settings = ({ apiKey, onSaveKey }: any) => {
   return (
     <div className="max-w-2xl mx-auto space-y-12">
       <div>
-        <h1 className="text-3xl font-display font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500">Configure your AI intelligence engine</p>
+        <h1 className="text-3xl font-display font-bold text-slate-100">Settings</h1>
+        <p className="text-brand-muted">Configure your AI intelligence engine</p>
       </div>
 
       <Card className="space-y-6">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-bold uppercase tracking-widest text-slate-400">Google Gemini API Key</label>
-            <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-xs text-emerald-600 hover:text-emerald-500 flex items-center gap-1">
+            <label className="text-sm font-bold uppercase tracking-widest text-brand-faint">Google Gemini API Key</label>
+            <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-xs text-brand-accent hover:text-brand-accent flex items-center gap-1">
               Get Key <ExternalLink size={12} />
             </a>
           </div>
@@ -909,17 +913,17 @@ const Settings = ({ apiKey, onSaveKey }: any) => {
             <input 
               type="password"
               placeholder="Paste your API key here..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-500 transition-colors font-mono text-sm text-slate-900"
+              className="w-full bg-brand-surface border border-brand-border rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors font-mono text-sm text-slate-100"
               value={key}
               onChange={e => setKey(e.target.value)}
             />
             {apiKey && !key && (
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-faint">
                 •••• •••• •••• {apiKey.slice(-4)}
               </div>
             )}
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-brand-muted">
             Your key is stored locally in your browser and used only for requests to Google Gemini.
           </p>
         </div>
@@ -930,8 +934,8 @@ const Settings = ({ apiKey, onSaveKey }: any) => {
       </Card>
 
       <div className="space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">About Thesis Radar</h3>
-        <p className="text-sm text-slate-500 leading-relaxed">
+        <h3 className="text-sm font-bold uppercase tracking-widest text-brand-muted">About Thesis Radar</h3>
+        <p className="text-sm text-brand-muted leading-relaxed">
           Thesis Radar is a specialized tool for Corporate Development teams to move from reactive deal tracking to proactive strategic sourcing. 
           By combining natural language strategic theses with real-time AI signal monitoring, we help you identify the right targets at the right time.
         </p>
@@ -1003,8 +1007,8 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
           <X size={20} />
         </Button>
         <div>
-          <h1 className="text-3xl font-display font-bold text-slate-900">Thesis Calibration</h1>
-          <p className="text-slate-500 text-sm">Refine the strategic lens and agentic behavior before deployment.</p>
+          <h1 className="text-3xl font-display font-bold text-slate-100">Thesis Calibration</h1>
+          <p className="text-brand-muted text-sm">Refine the strategic lens and agentic behavior before deployment.</p>
         </div>
       </div>
 
@@ -1013,58 +1017,58 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
         <div className="lg:col-span-5 space-y-8">
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-brand-accent flex items-center gap-2">
                 <ShieldAlert size={14} />
                 Strategic Alignment
               </label>
               <div className="flex items-center gap-2">
-                <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div className="w-24 h-1.5 bg-brand-surface rounded-full overflow-hidden">
                   <div 
-                    className={`h-full transition-all duration-1000 ${data.vercel_relevance_score > 70 ? 'bg-emerald-500' : data.vercel_relevance_score > 30 ? 'bg-amber-500' : 'bg-red-500'}`}
+                    className={`h-full transition-all duration-1000 ${data.vercel_relevance_score > 70 ? 'bg-brand-primary' : data.vercel_relevance_score > 30 ? 'bg-amber-500' : 'bg-red-500'}`}
                     style={{ width: `${data.vercel_relevance_score}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-mono text-slate-400">{data.vercel_relevance_score}%</span>
+                <span className="text-[10px] font-mono text-brand-faint">{data.vercel_relevance_score}%</span>
               </div>
             </div>
             <textarea 
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-4 focus:outline-none focus:border-emerald-500 transition-colors resize-none text-slate-700 leading-relaxed h-64 shadow-inner font-sans text-sm"
+              className="w-full bg-brand-card border border-brand-border rounded-xl px-4 py-4 focus:outline-none focus:border-brand-accent transition-colors resize-none text-brand-faint leading-relaxed h-64 shadow-none font-sans text-sm"
               value={data.market_context}
               onChange={e => handleUpdate({ market_context: e.target.value })}
             />
           </section>
 
           <section className="space-y-4">
-            <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Core Search Parameters</label>
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Core Search Parameters</label>
+            <div className="grid grid-cols-2 gap-4 bg-brand-surface p-4 rounded-xl border border-brand-border">
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Size Range</span>
+                <span className="text-[10px] text-brand-faint uppercase font-bold">Size Range</span>
                 <input 
-                  className="w-full bg-transparent border-b border-slate-200 py-1 text-xs focus:outline-none focus:border-emerald-500 transition-colors text-slate-700"
+                  className="w-full bg-transparent border-b border-brand-border py-1 text-xs focus:outline-none focus:border-brand-accent transition-colors text-brand-faint"
                   value={data.parameters.size_range}
                   onChange={e => handleParamUpdate('size_range', e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Funding Stage</span>
+                <span className="text-[10px] text-brand-faint uppercase font-bold">Funding Stage</span>
                 <input 
-                  className="w-full bg-transparent border-b border-slate-200 py-1 text-xs focus:outline-none focus:border-emerald-500 transition-colors text-slate-700"
+                  className="w-full bg-transparent border-b border-brand-border py-1 text-xs focus:outline-none focus:border-brand-accent transition-colors text-brand-faint"
                   value={data.parameters.funding_stage}
                   onChange={e => handleParamUpdate('funding_stage', e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Geography</span>
+                <span className="text-[10px] text-brand-faint uppercase font-bold">Geography</span>
                 <input 
-                  className="w-full bg-transparent border-b border-slate-200 py-1 text-xs focus:outline-none focus:border-emerald-500 transition-colors text-slate-700"
+                  className="w-full bg-transparent border-b border-brand-border py-1 text-xs focus:outline-none focus:border-brand-accent transition-colors text-brand-faint"
                   value={data.parameters.geography}
                   onChange={e => handleParamUpdate('geography', e.target.value)}
                 />
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Technologies</span>
+                <span className="text-[10px] text-brand-faint uppercase font-bold">Technologies</span>
                 <input 
-                  className="w-full bg-transparent border-b border-slate-200 py-1 text-xs focus:outline-none focus:border-emerald-500 transition-colors text-slate-700"
+                  className="w-full bg-transparent border-b border-brand-border py-1 text-xs focus:outline-none focus:border-brand-accent transition-colors text-brand-faint"
                   value={data.parameters.technologies}
                   onChange={e => handleParamUpdate('technologies', e.target.value)}
                 />
@@ -1073,8 +1077,8 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
           </section>
 
           <section className="space-y-4">
-            <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Evaluation Signals</label>
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+            <label className="text-xs font-bold uppercase tracking-widest text-brand-muted">Evaluation Signals</label>
+            <div className="bg-brand-card border border-brand-border rounded-2xl p-6 space-y-4 shadow-none">
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {data.signals.map((signal: string, i: number) => {
                   const parts = signal.split(':');
@@ -1082,16 +1086,16 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                   const priority = signalPriorities[i] || 'Medium';
 
                   return (
-                    <div key={i} className="flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 group hover:border-emerald-500/30 transition-all">
+                    <div key={i} className="flex flex-col gap-2 bg-brand-surface p-3 rounded-xl border border-brand-border/50 group hover:border-brand-accent/30 transition-all">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-grow flex items-center gap-2">
                           {category && (
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded border border-emerald-100">
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-brand-primary/10 text-brand-accent rounded border border-brand-primary/20">
                               {category}
                             </span>
                           )}
                           <input 
-                            className="flex-grow bg-transparent text-sm text-slate-700 focus:outline-none font-medium"
+                            className="flex-grow bg-transparent text-sm text-brand-faint focus:outline-none font-medium"
                             value={signal}
                             onChange={e => {
                               const newSignals = [...data.signals];
@@ -1103,8 +1107,8 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                         <select 
                           value={priority}
                           onChange={(e) => updateSignalPriority(i, e.target.value)}
-                          className={`text-[10px] font-bold uppercase bg-white border border-slate-200 rounded px-2 py-1 focus:ring-0 cursor-pointer ${
-                            priority === 'High' ? 'text-red-600' : priority === 'Medium' ? 'text-amber-600' : 'text-slate-400'
+                          className={`text-[10px] font-bold uppercase bg-brand-card border border-brand-border rounded px-2 py-1 focus:ring-0 cursor-pointer ${
+                            priority === 'High' ? 'text-red-400' : priority === 'Medium' ? 'text-amber-600' : 'text-brand-faint'
                           }`}
                         >
                           <option value="High">High</option>
@@ -1113,7 +1117,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                         </select>
                         <button 
                           onClick={() => handleUpdate({ signals: data.signals.filter((_: any, idx: number) => idx !== i) })}
-                          className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                          className="text-brand-faint hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -1124,7 +1128,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
               </div>
               <div className="flex gap-2">
                 <input 
-                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-slate-700"
+                  className="flex-grow bg-brand-surface border border-brand-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-brand-accent text-brand-faint"
                   placeholder="Add custom signal (e.g., People: Ex-CEO of...)"
                   value={newSignal}
                   onChange={e => setNewSignal(e.target.value)}
@@ -1141,15 +1145,15 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
         {/* Right Column: Workflow Configuration (Col 7) */}
         <div className="lg:col-span-7 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-display font-bold text-slate-900">Agent Workflow Configuration</h2>
+            <h2 className="text-xl font-display font-bold text-slate-100">Agent Workflow Configuration</h2>
             <Badge>Structured Deployment</Badge>
           </div>
           
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-sm">
+          <div className="bg-brand-card border border-brand-border rounded-2xl p-6 space-y-6 shadow-none">
             {data.workflow.map((step: WorkflowStep, sIdx: number) => (
               <div key={sIdx} className="relative">
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 font-mono text-sm font-bold shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-accent font-mono text-sm font-bold shrink-0">
                     {sIdx + 1}
                   </div>
                   <div className="flex-grow space-y-4">
@@ -1157,27 +1161,27 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                       {editingStep === sIdx ? (
                         <input 
                           autoFocus
-                          className="bg-transparent text-lg font-bold text-slate-900 focus:outline-none border-b border-emerald-500/50 w-full mr-4"
+                          className="bg-transparent text-lg font-bold text-slate-100 focus:outline-none border-b border-brand-accent/50 w-full mr-4"
                           value={step.title}
                           onChange={e => updateWorkflowStep(sIdx, { title: e.target.value })}
                           onBlur={() => setEditingStep(null)}
                           onKeyDown={e => e.key === 'Enter' && setEditingStep(null)}
                         />
                       ) : (
-                        <h4 className="text-lg font-bold text-slate-900">{step.title}</h4>
+                        <h4 className="text-lg font-bold text-slate-100">{step.title}</h4>
                       )}
                       <button 
                         onClick={() => setEditingStep(editingStep === sIdx ? null : sIdx)}
-                        className="p-1.5 text-slate-300 hover:text-emerald-600 transition-colors"
+                        className="p-1.5 text-brand-faint hover:text-brand-accent transition-colors"
                       >
                         <Edit size={16} />
                       </button>
                     </div>
                     
                     <div className="space-y-2">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Strategic Logic</span>
+                      <span className="text-[10px] text-brand-faint uppercase font-bold tracking-widest">Strategic Logic</span>
                       <textarea 
-                        className="w-full bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs text-slate-500 leading-relaxed resize-none h-auto min-h-[80px] focus:outline-none focus:border-emerald-500/30"
+                        className="w-full bg-brand-surface border border-brand-border/50 rounded-lg px-3 py-2 text-xs text-brand-muted leading-relaxed resize-none h-auto min-h-[80px] focus:outline-none focus:border-brand-accent/30"
                         value={step.logic}
                         onChange={e => updateWorkflowStep(sIdx, { logic: e.target.value })}
                       />
@@ -1185,19 +1189,19 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Execution Tasks</span>
-                        <button onClick={() => addTask(sIdx)} className="text-slate-300 hover:text-emerald-600 transition-colors">
+                        <span className="text-[10px] text-brand-faint uppercase font-bold tracking-widest">Execution Tasks</span>
+                        <button onClick={() => addTask(sIdx)} className="text-brand-faint hover:text-brand-accent transition-colors">
                           <Plus size={12} />
                         </button>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
                         {step.tasks.map((task, tIdx) => (
-                          <div key={tIdx} className="flex items-center gap-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100 group">
-                            <div className="w-5 h-5 rounded bg-white border border-slate-100 flex items-center justify-center text-[10px] font-mono text-slate-400">
+                          <div key={tIdx} className="flex items-center gap-3 bg-brand-surface/50 p-2 rounded-lg border border-brand-border/50 group">
+                            <div className="w-5 h-5 rounded bg-brand-card border border-brand-border/50 flex items-center justify-center text-[10px] font-mono text-brand-faint">
                               {String.fromCharCode(97 + tIdx)}
                             </div>
                             <input 
-                              className="flex-grow bg-transparent text-xs text-slate-500 focus:outline-none h-auto py-1"
+                              className="flex-grow bg-transparent text-xs text-brand-muted focus:outline-none h-auto py-1"
                               value={task}
                               onChange={e => updateTask(sIdx, tIdx, e.target.value)}
                             />
@@ -1208,14 +1212,14 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
                   </div>
                 </div>
                 {sIdx < data.workflow.length - 1 && (
-                  <div className="absolute left-4 top-10 bottom-0 w-px bg-slate-100 -ml-0.5" />
+                  <div className="absolute left-4 top-10 bottom-0 w-px bg-brand-border/30 -ml-0.5" />
                 )}
               </div>
             ))}
           </div>
 
           <div className="pt-4">
-            <Button className="w-full py-6 text-xl shadow-xl shadow-emerald-500/10 group" onClick={() => onConfirm(data)}>
+            <Button className="w-full py-6 text-xl shadow-xl shadow-brand-primary/10 group" onClick={() => onConfirm(data)}>
               Deploy Agents
               <ArrowRight size={24} className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -1229,8 +1233,8 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
 const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
   if (!marketMap) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center py-20 space-y-4">
-      <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-      <p className="text-slate-500 font-mono text-sm">Generating market map intelligence...</p>
+      <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
+      <p className="text-brand-muted font-mono text-sm">Generating market map intelligence...</p>
     </div>
   );
 
@@ -1242,25 +1246,25 @@ const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
             <ChevronRight size={20} className="rotate-180" />
           </Button>
           <div>
-            <h1 className="text-3xl font-display font-bold text-slate-900">Market Landscape</h1>
-            <p className="text-slate-500 text-sm">Strategic cluster analysis for: <span className="text-emerald-600">{thesis.title}</span></p>
+            <h1 className="text-3xl font-display font-bold text-slate-100">Market Landscape</h1>
+            <p className="text-brand-muted text-sm">Strategic cluster analysis for: <span className="text-brand-accent">{thesis.title}</span></p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl relative overflow-hidden min-h-[600px]">
+      <div className="bg-brand-card border border-brand-border p-8 rounded-3xl shadow-xl relative overflow-hidden min-h-[600px]">
         {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
           {marketMap.categories.map((cat: any, i: number) => (
-            <div key={i} className="flex flex-col gap-4 p-6 rounded-2xl bg-slate-50/50 border border-slate-100 hover:bg-white hover:shadow-md transition-all group/card">
-              <div className="flex items-start gap-3 mb-2 border-b border-slate-100 pb-4 relative group/header">
-                <div className="w-1.5 h-8 bg-emerald-500/30 rounded-full shrink-0 group-hover/card:bg-emerald-500 transition-colors" />
+            <div key={i} className="flex flex-col gap-4 p-6 rounded-2xl bg-brand-surface/50 border border-brand-border/50 hover:bg-brand-card hover:shadow-lg hover:shadow-black/10 transition-all group/card">
+              <div className="flex items-start gap-3 mb-2 border-b border-brand-border/50 pb-4 relative group/header">
+                <div className="w-1.5 h-8 bg-brand-primary/30 rounded-full shrink-0 group-hover/card:bg-brand-primary transition-colors" />
                 <div className="cursor-help">
                   <h3 className="font-bold text-lg text-slate-800 leading-tight">{cat.name}</h3>
-                  <div className="absolute left-0 top-full mt-2 hidden group-hover/header:block z-50 bg-white border border-slate-200 p-3 rounded-xl shadow-2xl w-64 text-xs text-slate-500 leading-relaxed">
+                  <div className="absolute left-0 top-full mt-2 hidden group-hover/header:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-64 text-xs text-brand-muted leading-relaxed">
                     {cat.description}
                   </div>
                 </div>
@@ -1269,11 +1273,11 @@ const MarketMapView = ({ thesis, marketMap, onBack }: any) => {
               <div className="flex flex-wrap gap-2 content-start">
                 {cat.companies.map((company: any, j: number) => (
                   <div key={j} className="group relative grow">
-                    <div className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-emerald-600 hover:border-emerald-500/50 shadow-sm transition-all cursor-help text-center w-full">
+                    <div className="px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs font-bold text-slate-400 hover:text-brand-accent hover:border-brand-accent/50 shadow-none transition-all cursor-help text-center w-full">
                       {company.name}
                     </div>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 bg-white border border-slate-200 p-3 rounded-xl shadow-2xl w-48 text-[10px] text-slate-500 leading-relaxed text-center pointer-events-none">
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white border-b border-r border-slate-200 rotate-45" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 bg-brand-card border border-brand-border p-3 rounded-xl shadow-2xl w-48 text-[10px] text-brand-muted leading-relaxed text-center pointer-events-none">
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-card border-b border-r border-brand-border rotate-45" />
                       {company.rationale}
                     </div>
                   </div>
@@ -1335,7 +1339,15 @@ export default function App() {
 
   const handleCreateThesis = async (formData: Partial<Thesis>) => {
     if (!apiKey) {
+      alert('Please add your Gemini API key in Settings before creating a thesis.');
       setView('settings');
+      return;
+    }
+
+    const title = (formData.title ?? '').trim();
+    const description = (formData.description ?? '').trim();
+    if (!title || !description) {
+      alert('Please provide a title and description for the thesis.');
       return;
     }
 
@@ -1345,23 +1357,26 @@ export default function App() {
     
     try {
       const id = crypto.randomUUID();
-      const newThesis = { ...formData, id, is_active: 1 } as Thesis;
+      const newThesis = { ...formData, title, description, id, is_active: 1 } as Thesis;
       
-      const res = await fetch('/api/theses', {
+      fetch('/api/theses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newThesis)
-      });
-
-      if (!res.ok) throw new Error('Failed to save thesis');
+      }).catch(err => console.warn('Backend save failed (server may not be running):', err));
 
       const calibration = await interpretThesis(apiKey, newThesis);
       setCalibrationData(calibration);
       setSelectedThesis(newThesis);
       setView('calibration');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Thesis creation failed", error);
-      alert("Failed to create thesis. Please check your API key and try again.");
+      const msg = error?.message || String(error);
+      if (msg.includes('API key') || msg.includes('401') || msg.includes('403')) {
+        alert('Invalid API key. Please check your Gemini API key in Settings.');
+      } else {
+        alert(`Failed to create thesis: ${msg}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1528,15 +1543,38 @@ export default function App() {
     setView('deepdive');
     setDeepDive(null);
 
-    const res = await fetch(`/api/targets/${target.id}/deep-dive`);
-    const existingDive = await res.json();
+    try {
+      const res = await Promise.race([
+        fetch(`/api/targets/${target.id}/deep-dive`),
+        new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+      ]);
+      const existingDive = await res.json();
 
-    if (existingDive) {
-      setDeepDive(JSON.parse(existingDive.content));
-    } else if (apiKey && selectedThesis) {
-      const newDive = await generateDeepDive(apiKey, selectedThesis, target);
+      if (existingDive && existingDive.content) {
+        setDeepDive(typeof existingDive.content === 'string' ? JSON.parse(existingDive.content) : existingDive.content);
+        return;
+      }
+    } catch (e) {
+      console.warn('Cache lookup failed, generating fresh:', e);
+    }
+
+    if (!apiKey) {
+      alert('Please add your Gemini API key in Settings to run deep dive research.');
+      setView('settings');
+      return;
+    }
+
+    const thesis = selectedThesis;
+    if (!thesis) {
+      alert('No thesis selected. Please select a thesis first.');
+      setView('dashboard');
+      return;
+    }
+
+    try {
+      const newDive = await generateDeepDive(apiKey, thesis, target);
       setDeepDive(newDive);
-      await fetch('/api/deep-dives', {
+      fetch('/api/deep-dives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1544,7 +1582,11 @@ export default function App() {
           target_id: target.id,
           content: newDive
         })
-      });
+      }).catch(err => console.warn('Failed to cache deep dive:', err));
+    } catch (error: any) {
+      console.error("Deep dive generation failed", error);
+      alert(`Deep dive failed: ${error?.message || error}`);
+      setView('watchlist');
     }
   };
 
@@ -1587,24 +1629,24 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-brand-bg text-slate-900 overflow-hidden font-sans selection:bg-emerald-500/30">
+    <div className="flex h-screen bg-brand-bg text-slate-100 overflow-hidden font-sans selection:bg-brand-accent/30">
       {/* Sidebar */}
       <motion.div 
         initial={false}
         animate={{ width: isSidebarCollapsed ? 80 : 280 }}
-        className="h-full bg-white border-r border-slate-200 flex flex-col shrink-0 relative z-50 shadow-sm"
+        className="h-full bg-brand-card border-r border-brand-border flex flex-col shrink-0 relative z-50"
       >
         <div className="p-6 flex items-center justify-between">
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-600/20">
+              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center shadow-lg shadow-brand-primary/20">
                 <Target size={20} className="text-white" />
               </div>
-              <span className="font-display font-bold text-xl tracking-tight text-slate-900">Thesis Radar</span>
+              <span className="font-display font-bold text-xl tracking-tight text-slate-100">Thesis Radar</span>
             </div>
           )}
           {isSidebarCollapsed && (
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-600/20 mx-auto">
+            <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center shadow-lg shadow-brand-primary/20 mx-auto">
               <Target size={20} className="text-white" />
             </div>
           )}
@@ -1613,24 +1655,24 @@ export default function App() {
         <nav className="flex-grow px-3 space-y-1 mt-4">
           <button 
             onClick={() => { setView('dashboard'); fetchTheses(); fetchStats(); }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${view === 'dashboard' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${view === 'dashboard' ? 'bg-brand-primary/10 text-brand-accent' : 'text-brand-muted hover:bg-brand-surface hover:text-slate-100'}`}
           >
-            <LayoutDashboard size={20} className={view === 'dashboard' ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'} />
+            <LayoutDashboard size={20} className={view === 'dashboard' ? 'text-brand-accent' : 'text-brand-faint group-hover:text-slate-400'} />
             {!isSidebarCollapsed && <span className="font-medium text-sm">Dashboard</span>}
           </button>
           <button 
             onClick={() => setView('settings')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${view === 'settings' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${view === 'settings' ? 'bg-brand-primary/10 text-brand-accent' : 'text-brand-muted hover:bg-brand-surface hover:text-slate-100'}`}
           >
-            <SettingsIcon size={20} className={view === 'settings' ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'} />
+            <SettingsIcon size={20} className={view === 'settings' ? 'text-brand-accent' : 'text-brand-faint group-hover:text-slate-400'} />
             {!isSidebarCollapsed && <span className="font-medium text-sm">Settings</span>}
           </button>
         </nav>
 
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-brand-border/50">
           <button 
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-brand-faint hover:bg-brand-surface hover:text-slate-400 transition-all"
           >
             {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
             {!isSidebarCollapsed && <span className="font-medium text-sm">Collapse</span>}
@@ -1651,13 +1693,13 @@ export default function App() {
               className="flex-grow flex flex-col items-center justify-center space-y-12 py-20"
             >
               <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto animate-bounce border border-emerald-100">
-                  <TrendingUp size={32} className="text-emerald-600" />
+                <div className="w-16 h-16 bg-brand-primary/10 rounded-2xl flex items-center justify-center mx-auto animate-bounce border border-brand-primary/20">
+                  <TrendingUp size={32} className="text-brand-accent" />
                 </div>
-                <h3 className="text-2xl font-display font-bold tracking-tight text-slate-900">
+                <h3 className="text-2xl font-display font-bold tracking-tight text-slate-100">
                   {loadingSteps.length > 1 ? 'Agent Deployment Active' : 'Strategic Analysis Active'}
                 </h3>
-                <p className="text-slate-500 text-sm max-w-xs mx-auto">
+                <p className="text-brand-muted text-sm max-w-xs mx-auto">
                   {loadingSteps.length > 1 
                     ? 'Executing calibrated workflow across market intelligence nodes.' 
                     : 'Synthesizing market context and strategic alignment filters.'}
@@ -1675,15 +1717,15 @@ export default function App() {
                         x: 0,
                       }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-6 relative overflow-hidden group shadow-sm"
+                      className="p-4 rounded-xl border border-brand-border bg-brand-card flex items-center gap-6 relative overflow-hidden group shadow-none"
                     >
                       <div className="flex items-center gap-4 shrink-0">
-                        <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest w-12">Step {i+1}</span>
-                        <RefreshCw size={18} className="text-emerald-600 animate-spin" />
+                        <span className="text-[10px] font-mono font-bold text-brand-faint uppercase tracking-widest w-12">Step {i+1}</span>
+                        <RefreshCw size={18} className="text-brand-accent animate-spin" />
                       </div>
 
                       <div className="flex-grow">
-                        <h4 className="font-bold text-slate-900">
+                        <h4 className="font-bold text-slate-100">
                           {step}
                         </h4>
                       </div>
@@ -1693,12 +1735,12 @@ export default function App() {
               )}
 
               {loadingSteps.length === 1 && (
-                <div className="w-64 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="w-64 h-1.5 bg-brand-border/30 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ x: '-100%' }}
                     animate={{ x: '100%' }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="w-1/2 h-full bg-emerald-500"
+                    className="w-1/2 h-full bg-brand-primary"
                   />
                 </div>
               )}
