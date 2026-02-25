@@ -64,9 +64,34 @@ export interface DeepDive {
   product_alignment_signals: string[];
 }
 
+const MODEL = "gemini-2.5-flash";
+
 const getAI = (apiKey: string) => {
   return new GoogleGenAI({ apiKey });
 };
+
+// Retry with exponential backoff for rate-limit / high-demand errors
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      const isRetryable =
+        msg.includes('429') ||
+        msg.includes('503') ||
+        msg.includes('overloaded') ||
+        msg.includes('high demand') ||
+        msg.includes('RESOURCE_EXHAUSTED') ||
+        msg.includes('rate') ||
+        msg.includes('quota');
+      if (!isRetryable || attempt === maxRetries) throw err;
+      const delay = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 500, 8000);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error('Retry failed');
+}
 
 export interface WorkflowStep {
   id: string;
@@ -120,8 +145,8 @@ For each thesis, provide:
 
 Return this as structured JSON.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
@@ -139,7 +164,7 @@ Return this as structured JSON.`;
         },
       },
     },
-  });
+  }));
 
   return JSON.parse(response.text || "[]");
 };
@@ -175,8 +200,8 @@ Provide:
 
 Return this as structured JSON.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
@@ -216,7 +241,7 @@ Return this as structured JSON.`;
         required: ["market_context", "parameters", "signals", "workflow", "vercel_relevance_score"],
       },
     },
-  });
+  }));
 
   return JSON.parse(response.text || "{}");
 };
@@ -246,8 +271,8 @@ One category MUST be "Strategic Startups" and should include high-potential earl
 
 Return this as structured JSON.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
@@ -280,7 +305,7 @@ Return this as structured JSON.`;
         required: ["categories"],
       },
     },
-  });
+  }));
 
   return JSON.parse(response.text || "{}");
 };
@@ -322,8 +347,8 @@ For each company, provide:
 
 Return the list in DESCENDING order of relevance.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
@@ -351,7 +376,7 @@ Return the list in DESCENDING order of relevance.`;
         },
       },
     },
-  });
+  }));
 
   return JSON.parse(response.text || "[]");
 };
@@ -388,8 +413,8 @@ For each company, provide:
 
 Be practical, opinionated, and focused on actionable targets.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
@@ -417,7 +442,7 @@ Be practical, opinionated, and focused on actionable targets.`;
         },
       },
     },
-  });
+  }));
 
   return JSON.parse(response.text || "[]");
 };
@@ -434,8 +459,8 @@ For each company, generate an updated signal score (0-100) and identify any new 
 Timing signals include: executive departures, layoffs, failed fundraises, competitor acquisitions, product pivots, declining community engagement, or positive counter-signals like large funding rounds.
 Be honest about uncertainty.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const response = await withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: prompt }] }],
     config: {
       responseMimeType: "application/json",
@@ -452,7 +477,7 @@ Be honest about uncertainty.`;
         },
       },
     },
-  });
+  }));
 
   const updates = JSON.parse(response.text || "[]");
   return updates.map((u: any) => {
@@ -469,8 +494,8 @@ export const generateDeepDive = async (apiKey: string, thesis: Thesis, target: T
   const ai = getAI(apiKey);
   const context = `M&A deep dive for ${target.name}. Thesis: "${thesis.title}: ${thesis.description}". CRITICAL: NO PARAGRAPHS. Every section must be concise bullet points. Be a senior M&A analyst. Be pragmatic and opinionated.`;
 
-  const callA = ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const callA = withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: `${context}
 
 Sections:
@@ -499,10 +524,10 @@ Sections:
         required: ["overview", "strategic_fit", "team", "product_tech", "timing", "risks", "product_alignment_signals", "founders"],
       },
     },
-  });
+  }));
 
-  const callB = ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+  const callB = withRetry(() => ai.models.generateContent({
+    model: MODEL,
     contents: [{ parts: [{ text: `${context}
 
 Sections:
@@ -544,7 +569,7 @@ Sections:
         required: ["financials", "comparables", "funding_investors", "competitors", "cap_table_shareholding", "investments_acquisitions", "sources"],
       },
     },
-  });
+  }));
 
   const [resA, resB] = await Promise.all([callA, callB]);
   const partA = JSON.parse(resA.text || "{}");
