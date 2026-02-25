@@ -1,5 +1,5 @@
 import type { Plugin, ViteDevServer } from "vite";
-import { sql, initSchema } from "./db";
+import { sql, initSchema, setConnectionString } from "./db";
 
 let schemaInited = false;
 async function ensureSchema() {
@@ -28,11 +28,30 @@ function sendJson(res: import("http").ServerResponse, status: number, data: unkn
   res.end(JSON.stringify(data));
 }
 
-export function apiPlugin(): Plugin {
+/**
+ * Pass the env record from Vite's loadEnv() so we can extract the DB URL.
+ * process.env is NOT populated inside Vite's bundled config context,
+ * so we need the explicit value.
+ */
+export function apiPlugin(env?: Record<string, string>): Plugin {
   return {
     name: "api-routes",
     configureServer(server: ViteDevServer) {
-      console.log("[v0] API plugin loaded. POSTGRES_URL set:", !!process.env.POSTGRES_URL, "DATABASE_URL set:", !!process.env.DATABASE_URL);
+      // Inject the connection string from the Vite env into the db module
+      const dbUrl =
+        env?.DATABASE_URL ||
+        env?.POSTGRES_URL ||
+        process.env.DATABASE_URL ||
+        process.env.POSTGRES_URL ||
+        "";
+
+      if (dbUrl) {
+        setConnectionString(dbUrl);
+        console.log("[v0] API plugin: DB connection string found and set.");
+      } else {
+        console.warn("[v0] API plugin: No DB connection string found in env or process.env!");
+      }
+
       server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
         if (!url.startsWith("/api/")) return next();

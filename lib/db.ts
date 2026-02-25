@@ -1,10 +1,29 @@
 import { neon } from "@neondatabase/serverless";
 
 let _neonSql: ReturnType<typeof neon> | null = null;
+let _overrideConnectionString: string | null = null;
+
+/**
+ * Allow callers (e.g. Vite plugin) to supply the connection string explicitly,
+ * since process.env may not be populated inside Vite's config bundle.
+ */
+export function setConnectionString(url: string) {
+  _overrideConnectionString = url;
+  _neonSql = null; // reset so next call re-creates with new URL
+}
+
+function getConnectionString(): string {
+  return (
+    _overrideConnectionString ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    ""
+  );
+}
 
 function getNeonSql() {
   if (_neonSql) return _neonSql;
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+  const connectionString = getConnectionString();
   if (!connectionString) {
     throw new Error("DATABASE_URL or POSTGRES_URL is not set");
   }
@@ -12,7 +31,7 @@ function getNeonSql() {
   return _neonSql;
 }
 
-/** Tagged template that returns { rows } to match the shape expected by server.ts */
+/** Tagged template that returns { rows } to match the shape expected everywhere */
 export async function sql(strings: TemplateStringsArray, ...values: unknown[]) {
   const neonSql = getNeonSql();
   const rows = await neonSql(strings, ...values);
@@ -24,12 +43,11 @@ export async function initSchema() {
   try {
     neonSql = getNeonSql();
   } catch {
-    console.warn("DATABASE_URL / POSTGRES_URL not set; DB calls will fail. Add Neon Postgres (Vercel Marketplace) and set env.");
+    console.warn("DB connection string not available; skipping schema init.");
     return;
   }
   const run = async (strings: TemplateStringsArray, ...values: unknown[]) => {
-    const r = await neonSql(strings, ...values);
-    return r;
+    return await neonSql(strings, ...values);
   };
   await run`
     CREATE TABLE IF NOT EXISTS theses (

@@ -7,7 +7,7 @@ import { apiPlugin } from './lib/vite-api-plugin';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    plugins: [react(), tailwindcss(), apiPlugin()],
+    plugins: [react(), tailwindcss(), apiPlugin(env)],
     build: {
       outDir: 'dist',
     },
