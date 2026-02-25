@@ -102,18 +102,16 @@ const Dashboard = ({ theses, stats, onNewThesis, onSelectThesis, onDeleteThesis,
       </Button>
     </div>
 
-    {stats && (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="flex flex-col gap-1 bg-blue-50/50 border-blue-100">
-          <span className="text-xs text-blue-600 uppercase tracking-widest font-bold">Active Theses</span>
-          <span className="text-3xl font-mono text-blue-900">{theses.filter((t: any) => t.is_active).length}</span>
-        </Card>
-        <Card className="flex flex-col gap-1 bg-purple-50/50 border-purple-100">
-          <span className="text-xs text-purple-600 uppercase tracking-widest font-bold">Tracked Targets</span>
-          <span className="text-3xl font-mono text-purple-900">{stats.total_targets}</span>
-        </Card>
-      </div>
-    )}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Card className="flex flex-col gap-1 bg-blue-50/50 border-blue-100">
+        <span className="text-xs text-blue-600 uppercase tracking-widest font-bold">Active Theses</span>
+        <span className="text-3xl font-mono text-blue-900">{theses.filter((t: any) => t.is_active).length}</span>
+      </Card>
+      <Card className="flex flex-col gap-1 bg-purple-50/50 border-purple-100">
+        <span className="text-xs text-purple-600 uppercase tracking-widest font-bold">Tracked Targets</span>
+        <span className="text-3xl font-mono text-purple-900">{stats?.total_targets || 0}</span>
+      </Card>
+    </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {theses.map((thesis: Thesis) => {
@@ -201,7 +199,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
           onClick={() => setMode('selection')}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'selection' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          AI Suggestion
+          AI Suggestions
         </button>
         <button 
           onClick={() => setMode('manual')}
@@ -221,7 +219,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
               <div className="space-y-2">
                 <h3 className="font-bold text-slate-900">Generate Strategic Opportunities</h3>
                 <p className="text-sm text-slate-500 max-w-xs mx-auto">
-                  Our AI will analyze Vercel's ecosystem and current market trends to suggest high-impact acquisition thesis.
+                  Our AI will analyze Vercel's ecosystem and current market trends to suggest high-impact acquisition theses.
                 </p>
               </div>
               <div className="space-y-6 pt-4">
@@ -235,7 +233,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                   />
                 </div>
                 <Button onClick={handleSuggest} disabled={isSuggesting} className="mx-auto w-full">
-                  {isSuggesting ? <><RefreshCw size={18} className="animate-spin" /> Analyzing Markets...</> : 'Suggest Thesis'}
+                  {isSuggesting ? <><RefreshCw size={18} className="animate-spin" /> Analyzing Markets...</> : 'Suggest Theses'}
                 </Button>
               </div>
             </div>
@@ -277,7 +275,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                 </div>
                 <Button variant="secondary" onClick={handleSuggest} disabled={isSuggesting} className="w-full">
                   <RefreshCw size={16} className={isSuggesting ? 'animate-spin' : ''} />
-                  Regenerate Suggestion
+                  Regenerate Suggestions
                 </Button>
               </div>
             </div>
@@ -1218,7 +1216,7 @@ const CalibrationScreen = ({ calibration, onConfirm, onCancel }: any) => {
 
           <div className="pt-4">
             <Button className="w-full py-6 text-xl shadow-xl shadow-emerald-500/10 group" onClick={() => onConfirm(data)}>
-              Deploy Intelligence Agents
+              Deploy Agents
               <ArrowRight size={24} className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
@@ -1402,10 +1400,12 @@ export default function App() {
       });
 
       await fetchTheses();
+      await fetchStats();
       setTargets(targetsWithIds as TargetType[]);
       setView('watchlist');
     } catch (error) {
       console.error("Search execution failed", error);
+      alert("Search execution failed. This might be due to a timeout or API key issue. Please try again.");
     } finally {
       clearInterval(interval);
       setIsLoading(false);

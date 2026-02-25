@@ -164,6 +164,12 @@ async function startServer() {
 
   app.post("/api/targets/bulk", (req, res) => {
     const { thesis_id, targets } = req.body;
+    console.log(`Bulk inserting ${targets?.length || 0} targets for thesis ${thesis_id}`);
+    
+    if (!targets || !Array.isArray(targets)) {
+      return res.status(400).json({ error: "Invalid targets data" });
+    }
+
     const insert = db.prepare(`
       INSERT INTO targets (
         id, thesis_id, name, one_liner, stage, headcount, signal_score, top_signal, fit_rating,
@@ -232,22 +238,27 @@ async function startServer() {
 
   // Summary Stats
   app.get("/api/stats", (req, res) => {
-    const stats = db.prepare(`
-      SELECT 
-        (SELECT COUNT(*) FROM theses) as total_theses,
-        (SELECT COUNT(*) FROM targets) as total_targets,
-        (SELECT COUNT(*) FROM signals_history WHERE created_at > date('now', '-7 days')) as weekly_signals
-    `).get();
+    try {
+      const stats = db.prepare(`
+        SELECT 
+          (SELECT COUNT(*) FROM theses) as total_theses,
+          (SELECT COUNT(*) FROM targets) as total_targets,
+          (SELECT COUNT(*) FROM signals_history WHERE created_at > date('now', '-7 days')) as weekly_signals
+      `).get();
 
-    const thesesStats = db.prepare(`
-      SELECT 
-        t.id,
-        (SELECT COUNT(*) FROM targets WHERE thesis_id = t.id) as targets_count,
-        (SELECT COUNT(*) FROM signals_history sh JOIN targets tg ON sh.target_id = tg.id WHERE tg.thesis_id = t.id) as signals_count
-      FROM theses t
-    `).all();
+      const thesesStats = db.prepare(`
+        SELECT 
+          t.id,
+          (SELECT COUNT(*) FROM targets WHERE thesis_id = t.id) as targets_count,
+          (SELECT COUNT(*) FROM signals_history sh JOIN targets tg ON sh.target_id = tg.id WHERE tg.thesis_id = t.id) as signals_count
+        FROM theses t
+      `).all();
 
-    res.json({ ...stats, thesesStats });
+      res.json({ ...stats, thesesStats });
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
   });
 
   // Vite middleware for development
