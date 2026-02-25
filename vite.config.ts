@@ -4,11 +4,17 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
+  // loadEnv reads from .env files; process.env has system env vars (Vercel build)
+  const fileEnv = loadEnv(mode, '.', '');
+  const p = process.env;
 
-  // Resolve Supabase credentials from any available env var name
-  const supabaseUrl = env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL || '';
-  const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || '';
+  // Resolve Supabase credentials: check .env files first, then system env vars
+  const supabaseUrl =
+    fileEnv.VITE_SUPABASE_URL || fileEnv.NEXT_PUBLIC_SUPABASE_URL || fileEnv.SUPABASE_URL ||
+    p.VITE_SUPABASE_URL || p.NEXT_PUBLIC_SUPABASE_URL || p.SUPABASE_URL || '';
+  const supabaseAnonKey =
+    fileEnv.VITE_SUPABASE_ANON_KEY || fileEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY || fileEnv.SUPABASE_ANON_KEY ||
+    p.VITE_SUPABASE_ANON_KEY || p.NEXT_PUBLIC_SUPABASE_ANON_KEY || p.SUPABASE_ANON_KEY || '';
 
   return {
     plugins: [react(), tailwindcss()],
@@ -18,7 +24,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
+      'process.env.GEMINI_API_KEY': JSON.stringify(fileEnv.GEMINI_API_KEY || p.GEMINI_API_KEY || ''),
     },
     resolve: {
       alias: {
