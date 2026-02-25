@@ -1,14 +1,12 @@
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  // loadEnv reads from .env files; process.env has system env vars (Vercel build)
   const fileEnv = loadEnv(mode, '.', '');
   const p = process.env;
 
-  // Resolve Supabase credentials: check .env files first, then system env vars
   const supabaseUrl =
     fileEnv.VITE_SUPABASE_URL || fileEnv.NEXT_PUBLIC_SUPABASE_URL || fileEnv.SUPABASE_URL ||
     p.VITE_SUPABASE_URL || p.NEXT_PUBLIC_SUPABASE_URL || p.SUPABASE_URL || '';
