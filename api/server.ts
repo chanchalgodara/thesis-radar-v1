@@ -19,8 +19,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const url = req.url || "";
+  // Vercel rewrites /api/:path* to /api/server?__path=:path*
+  // Reconstruct the original /api/... path from the query param
+  const rawPath = req.query?.__path;
+  const pathStr = Array.isArray(rawPath) ? rawPath.join("/") : rawPath || "";
+  const url = pathStr ? `/api/${pathStr}` : (req.url || "").split("?")[0];
   const method = req.method || "GET";
+
+  console.log("[v0] handler hit:", { url, method, rawUrl: req.url, query: req.query });
 
   try {
     const supabase = getSupabase();
