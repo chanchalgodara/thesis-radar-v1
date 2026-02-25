@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
