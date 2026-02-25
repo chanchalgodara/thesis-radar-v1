@@ -201,7 +201,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
           onClick={() => setMode('selection')}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'selection' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          AI Suggestions
+          AI Suggestion
         </button>
         <button 
           onClick={() => setMode('manual')}
@@ -221,7 +221,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
               <div className="space-y-2">
                 <h3 className="font-bold text-slate-900">Generate Strategic Opportunities</h3>
                 <p className="text-sm text-slate-500 max-w-xs mx-auto">
-                  Our AI will analyze Vercel's ecosystem and current market trends to suggest high-impact acquisition theses.
+                  Our AI will analyze Vercel's ecosystem and current market trends to suggest high-impact acquisition thesis.
                 </p>
               </div>
               <div className="space-y-6 pt-4">
@@ -235,7 +235,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                   />
                 </div>
                 <Button onClick={handleSuggest} disabled={isSuggesting} className="mx-auto w-full">
-                  {isSuggesting ? <><RefreshCw size={18} className="animate-spin" /> Analyzing Markets...</> : 'Suggest Theses'}
+                  {isSuggesting ? <><RefreshCw size={18} className="animate-spin" /> Analyzing Markets...</> : 'Suggest Thesis'}
                 </Button>
               </div>
             </div>
@@ -277,7 +277,7 @@ const ThesisEditor = ({ onSave, onCancel, apiKey }: any) => {
                 </div>
                 <Button variant="secondary" onClick={handleSuggest} disabled={isSuggesting} className="w-full">
                   <RefreshCw size={16} className={isSuggesting ? 'animate-spin' : ''} />
-                  Regenerate Suggestions
+                  Regenerate Suggestion
                 </Button>
               </div>
             </div>
@@ -1345,22 +1345,25 @@ export default function App() {
     setLoadingSteps(['Analyzing Strategic Thesis...']);
     setCurrentLoadingStep(0);
     
-    const id = crypto.randomUUID();
-    const newThesis = { ...formData, id } as Thesis;
-    
-    await fetch('/api/theses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newThesis)
-    });
-
     try {
+      const id = crypto.randomUUID();
+      const newThesis = { ...formData, id, is_active: 1 } as Thesis;
+      
+      const res = await fetch('/api/theses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newThesis)
+      });
+
+      if (!res.ok) throw new Error('Failed to save thesis');
+
       const calibration = await interpretThesis(apiKey, newThesis);
       setCalibrationData(calibration);
       setSelectedThesis(newThesis);
       setView('calibration');
     } catch (error) {
-      console.error("Thesis interpretation failed", error);
+      console.error("Thesis creation failed", error);
+      alert("Failed to create thesis. Please check your API key and try again.");
     } finally {
       setIsLoading(false);
     }
