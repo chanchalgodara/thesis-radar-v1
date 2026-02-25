@@ -1,11 +1,5 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
-import path from "path";
-import { fileURLToPath } from "url";
-import { sql, initSchema } from "./lib/db";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { sql, initSchema } from "../lib/db";
 
 let schemaInited = false;
 async function ensureSchema() {
@@ -15,15 +9,11 @@ async function ensureSchema() {
 }
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
-app.use(async (_req, _res, next) => {
+app.use(async (_req: express.Request, _res: express.Response, next: express.NextFunction) => {
   await ensureSchema();
   next();
 });
-
-// API Routes
 
 // Theses
 app.get("/api/theses", async (_req, res) => {
@@ -265,25 +255,5 @@ app.get("/api/stats", async (_req, res) => {
     res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
-
-// Vite middleware for development; static for production
-if (process.env.NODE_ENV !== "production") {
-  createViteServer({ server: { middlewareMode: true }, appType: "spa" }).then((vite) => {
-    app.use(vite.middlewares);
-    if (!process.env.VERCEL) {
-      ensureSchema().then(() => {
-        app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
-      });
-    }
-  });
-} else {
-  app.use(express.static(path.join(__dirname, "dist")));
-  app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
-  if (!process.env.VERCEL) {
-    ensureSchema().then(() => {
-      app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
-    });
-  }
-}
 
 export default app;
