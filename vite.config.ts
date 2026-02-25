@@ -5,35 +5,19 @@ import {defineConfig, loadEnv} from 'vite';
 import { apiPlugin } from './lib/vite-api-plugin';
 
 export default defineConfig(({mode}) => {
-  // loadEnv with '' prefix loads ALL env vars from .env files
   const env = loadEnv(mode, '.', '');
 
-  // CRITICAL: Also merge real process.env values into env.
-  // In v0 sandbox, Supabase sets POSTGRES_URL as a real system env var,
-  // but loadEnv only reads .env files. We need both sources.
-  const dbUrl =
-    env.POSTGRES_URL ||
-    env.DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL ||
-    "";
-
-  // Inject into process.env so that lib/db.ts can find it at runtime
-  // (the Vite config .mjs bundle sometimes loses process.env access)
-  if (dbUrl) {
-    process.env.POSTGRES_URL = dbUrl;
-    process.env.DATABASE_URL = dbUrl;
-  }
-
-  console.log("[v0] Vite config: POSTGRES_URL available:", !!dbUrl, "source:", env.POSTGRES_URL ? "loadEnv" : process.env.POSTGRES_URL ? "process.env" : "none");
+  // Supabase REST API credentials - works over HTTPS, no direct PG connection needed
+  const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
 
   return {
-    plugins: [react(), tailwindcss(), apiPlugin(dbUrl)],
+    plugins: [react(), tailwindcss(), apiPlugin(supabaseUrl, supabaseKey)],
     build: {
       outDir: 'dist',
     },
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
     },
     resolve: {
       alias: {

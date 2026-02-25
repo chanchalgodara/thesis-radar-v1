@@ -1,259 +1,202 @@
 import express from "express";
-import { sql, initSchema } from "../lib/db";
+import { createClient } from "@supabase/supabase-js";
 
-let schemaInited = false;
-async function ensureSchema() {
-  if (schemaInited) return;
-  await initSchema();
-  schemaInited = true;
+function getSupabase() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
+  if (!url || !key) throw new Error("Supabase credentials not configured");
+  return createClient(url, key);
 }
 
 const app = express();
 app.use(express.json());
-app.use(async (_req: express.Request, _res: express.Response, next: express.NextFunction) => {
-  await ensureSchema();
-  next();
-});
 
 // Theses
 app.get("/api/theses", async (_req, res) => {
   try {
-    const { rows } = await sql`SELECT * FROM theses ORDER BY updated_at DESC`;
-    res.json(rows);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch theses" });
-  }
-});
-
-app.get("/api/theses/:id", async (req, res) => {
-  try {
-    const { rows } = await sql`SELECT * FROM theses WHERE id = ${req.params.id}`;
-    const thesis = rows[0];
-    if (!thesis) return res.status(404).json({ error: "Thesis not found" });
-    res.json(thesis);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch thesis" });
-  }
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from("theses").select("*").order("updated_at", { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/theses", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { id, title, description, size_range, funding_stage, geography, technologies } = req.body;
-    await sql`
-      INSERT INTO theses (id, title, description, size_range, funding_stage, geography, technologies, is_active)
-      VALUES (${id}, ${title}, ${description}, ${size_range ?? null}, ${funding_stage ?? null}, ${geography ?? null}, ${technologies ?? null}, 1)
-    `;
+    const { error } = await supabase.from("theses").insert({ id, title, description, size_range: size_range ?? null, funding_stage: funding_stage ?? null, geography: geography ?? null, technologies: technologies ?? null, is_active: 1 });
+    if (error) throw error;
     res.status(201).json({ id });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to create thesis" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.patch("/api/theses/:id/toggle", async (req, res) => {
   try {
-    await sql`UPDATE theses SET is_active = 1 - is_active WHERE id = ${req.params.id}`;
+    const supabase = getSupabase();
+    const { data: thesis } = await supabase.from("theses").select("is_active").eq("id", req.params.id).single();
+    const { error } = await supabase.from("theses").update({ is_active: thesis?.is_active === 1 ? 0 : 1 }).eq("id", req.params.id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to toggle thesis" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.put("/api/theses/:id", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { title, description, size_range, funding_stage, geography, technologies } = req.body;
-    await sql`
-      UPDATE theses
-      SET title = ${title}, description = ${description}, size_range = ${size_range ?? null}, funding_stage = ${funding_stage ?? null}, geography = ${geography ?? null}, technologies = ${technologies ?? null}, updated_at = NOW()
-      WHERE id = ${req.params.id}
-    `;
+    const { error } = await supabase.from("theses").update({ title, description, size_range: size_range ?? null, funding_stage: funding_stage ?? null, geography: geography ?? null, technologies: technologies ?? null, updated_at: new Date().toISOString() }).eq("id", req.params.id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to update thesis" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.delete("/api/theses/:id", async (req, res) => {
   try {
-    await sql`DELETE FROM theses WHERE id = ${req.params.id}`;
+    const supabase = getSupabase();
+    const { error } = await supabase.from("theses").delete().eq("id", req.params.id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to delete thesis" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 // Targets
 app.get("/api/theses/:thesisId/targets", async (req, res) => {
   try {
-    const { rows } = await sql`SELECT * FROM targets WHERE thesis_id = ${req.params.thesisId} ORDER BY signal_score DESC`;
-    res.json(rows);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch targets" });
-  }
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from("targets").select("*").eq("thesis_id", req.params.thesisId).order("signal_score", { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/targets", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const t = req.body;
-    await sql`
-      INSERT INTO targets (
-        id, thesis_id, name, one_liner, stage, headcount, signal_score, top_signal, fit_rating,
-        client_overlap_current, client_overlap_potential, product_rating, product_score,
-        valuation, funding_stage_detail, current_investors
-      )
-      VALUES (
-        ${t.id}, ${t.thesis_id}, ${t.name}, ${t.one_liner ?? null}, ${t.stage ?? null}, ${t.headcount ?? null},
-        ${t.signal_score ?? 0}, ${t.top_signal ?? null}, ${t.fit_rating ?? null},
-        ${t.client_overlap_current ?? null}, ${t.client_overlap_potential ?? null},
-        ${t.product_rating ?? null}, ${t.product_score ?? null},
-        ${t.valuation ?? null}, ${t.funding_stage_detail ?? null}, ${t.current_investors ?? null}
-      )
-    `;
+    const { error } = await supabase.from("targets").insert({
+      id: t.id, thesis_id: t.thesis_id, name: t.name, one_liner: t.one_liner ?? null,
+      stage: t.stage ?? null, headcount: t.headcount ?? null, signal_score: t.signal_score ?? 0,
+      top_signal: t.top_signal ?? null, fit_rating: t.fit_rating ?? null,
+      client_overlap_current: t.client_overlap_current ?? null, client_overlap_potential: t.client_overlap_potential ?? null,
+      product_rating: t.product_rating ?? null, product_score: t.product_score ?? null,
+      valuation: t.valuation ?? null, funding_stage_detail: t.funding_stage_detail ?? null,
+      current_investors: t.current_investors ?? null,
+    });
+    if (error) throw error;
     res.status(201).json({ id: t.id });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to create target" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/targets/bulk", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { thesis_id, targets: targetsList } = req.body;
-    if (!targetsList || !Array.isArray(targetsList)) {
-      return res.status(400).json({ error: "Invalid targets data" });
-    }
-    console.log(`Bulk inserting ${targetsList.length} targets for thesis ${thesis_id}`);
-
-    for (const t of targetsList) {
-      await sql`
-        INSERT INTO targets (
-          id, thesis_id, name, one_liner, stage, headcount, signal_score, top_signal, fit_rating,
-          client_overlap_current, client_overlap_potential, product_rating, product_score,
-          valuation, funding_stage_detail, current_investors
-        )
-        VALUES (
-          ${t.id}, ${thesis_id}, ${t.name}, ${t.one_liner ?? null}, ${t.stage ?? null}, ${t.headcount ?? null},
-          ${t.signal_score ?? 0}, ${t.top_signal ?? null}, ${t.fit_rating ?? null},
-          ${t.client_overlap_current ?? null}, ${t.client_overlap_potential ?? null},
-          ${t.product_rating ?? null}, ${t.product_score ?? null},
-          ${t.valuation ?? null}, ${t.funding_stage_detail ?? null}, ${t.current_investors ?? null}
-        )
-      `;
-    }
+    if (!targetsList || !Array.isArray(targetsList)) return res.status(400).json({ error: "Invalid targets data" });
+    const rows = targetsList.map((t: any) => ({
+      id: t.id, thesis_id, name: t.name, one_liner: t.one_liner ?? null, stage: t.stage ?? null,
+      headcount: t.headcount ?? null, signal_score: t.signal_score ?? 0, top_signal: t.top_signal ?? null,
+      fit_rating: t.fit_rating ?? null, client_overlap_current: t.client_overlap_current ?? null,
+      client_overlap_potential: t.client_overlap_potential ?? null, product_rating: t.product_rating ?? null,
+      product_score: t.product_score ?? null, valuation: t.valuation ?? null,
+      funding_stage_detail: t.funding_stage_detail ?? null, current_investors: t.current_investors ?? null,
+    }));
+    const { error } = await supabase.from("targets").insert(rows);
+    if (error) throw error;
     res.status(201).json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to bulk insert targets" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.patch("/api/targets/:id", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const id = req.params.id;
-    const body = req.body as Record<string, unknown>;
-    if (body.signal_score !== undefined) await sql`UPDATE targets SET signal_score = ${body.signal_score as number}, last_updated = NOW() WHERE id = ${id}`;
-    if (body.top_signal !== undefined) await sql`UPDATE targets SET top_signal = ${body.top_signal as string}, last_updated = NOW() WHERE id = ${id}`;
-    if (body.is_pinned !== undefined) await sql`UPDATE targets SET is_pinned = ${body.is_pinned as number}, last_updated = NOW() WHERE id = ${id}`;
-    if (body.is_dismissed !== undefined) await sql`UPDATE targets SET is_dismissed = ${body.is_dismissed as number}, last_updated = NOW() WHERE id = ${id}`;
+    const body = req.body;
+    const updates: Record<string, unknown> = { last_updated: new Date().toISOString() };
+    if (body.signal_score !== undefined) updates.signal_score = body.signal_score;
+    if (body.top_signal !== undefined) updates.top_signal = body.top_signal;
+    if (body.is_pinned !== undefined) updates.is_pinned = body.is_pinned;
+    if (body.is_dismissed !== undefined) updates.is_dismissed = body.is_dismissed;
+    const { error } = await supabase.from("targets").update(updates).eq("id", id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to update target" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.delete("/api/targets/:id", async (req, res) => {
   try {
-    await sql`DELETE FROM targets WHERE id = ${req.params.id}`;
+    const supabase = getSupabase();
+    const { error } = await supabase.from("targets").delete().eq("id", req.params.id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to delete target" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 // Deep Dives
 app.get("/api/targets/:id/deep-dive", async (req, res) => {
   try {
-    const { rows } = await sql`SELECT * FROM deep_dives WHERE target_id = ${req.params.id}`;
-    res.json(rows[0] || null);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch deep dive" });
-  }
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from("deep_dives").select("*").eq("target_id", req.params.id).limit(1).maybeSingle();
+    if (error) throw error;
+    res.json(data || null);
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/deep-dives", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { id, target_id, content } = req.body;
     const contentStr = typeof content === "string" ? content : JSON.stringify(content);
-    await sql`
-      INSERT INTO deep_dives (id, target_id, content)
-      VALUES (${id}, ${target_id}, ${contentStr})
-      ON CONFLICT (id) DO UPDATE SET target_id = ${target_id}, content = ${contentStr}
-    `;
+    const { error } = await supabase.from("deep_dives").upsert({ id, target_id, content: contentStr });
+    if (error) throw error;
     res.status(201).json({ id });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to save deep dive" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 // Signals History
 app.get("/api/targets/:id/signals", async (req, res) => {
   try {
-    const { rows } = await sql`SELECT * FROM signals_history WHERE target_id = ${req.params.id} ORDER BY created_at DESC`;
-    res.json(rows);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch signals" });
-  }
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from("signals_history").select("*").eq("target_id", req.params.id).order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 app.post("/api/signals", async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { target_id, score, signal_text } = req.body;
-    await sql`
-      INSERT INTO signals_history (target_id, score, signal_text)
-      VALUES (${target_id}, ${score ?? null}, ${signal_text ?? null})
-    `;
+    const { error } = await supabase.from("signals_history").insert({ target_id, score: score ?? null, signal_text: signal_text ?? null });
+    if (error) throw error;
     res.status(201).json({ success: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to create signal" });
-  }
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
-// Summary Stats
+// Stats
 app.get("/api/stats", async (_req, res) => {
   try {
-    const { rows: statsRows } = await sql`
-      SELECT
-        (SELECT COUNT(*)::int FROM theses) as total_theses,
-        (SELECT COUNT(*)::int FROM targets) as total_targets,
-        (SELECT COUNT(*)::int FROM signals_history WHERE created_at > NOW() - INTERVAL '7 days') as weekly_signals
-    `;
-    const stats = statsRows[0];
+    const supabase = getSupabase();
+    const { count: totalTheses } = await supabase.from("theses").select("*", { count: "exact", head: true });
+    const { count: totalTargets } = await supabase.from("targets").select("*", { count: "exact", head: true });
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: weeklySignals } = await supabase.from("signals_history").select("*", { count: "exact", head: true }).gte("created_at", weekAgo);
 
-    const { rows: thesesStats } = await sql`
-      SELECT
-        t.id,
-        (SELECT COUNT(*)::int FROM targets WHERE thesis_id = t.id) as targets_count,
-        (SELECT COUNT(*)::int FROM signals_history sh JOIN targets tg ON sh.target_id = tg.id WHERE tg.thesis_id = t.id) as signals_count
-      FROM theses t
-    `;
+    const { data: allTheses } = await supabase.from("theses").select("id");
+    const thesesStats = [];
+    for (const t of allTheses || []) {
+      const { count: tc } = await supabase.from("targets").select("*", { count: "exact", head: true }).eq("thesis_id", t.id);
+      const { data: tids } = await supabase.from("targets").select("id").eq("thesis_id", t.id);
+      let sc = 0;
+      if (tids && tids.length > 0) {
+        const { count } = await supabase.from("signals_history").select("*", { count: "exact", head: true }).in("target_id", tids.map((x: any) => x.id));
+        sc = count || 0;
+      }
+      thesesStats.push({ id: t.id, targets_count: tc || 0, signals_count: sc });
+    }
 
-    res.json({ ...stats, thesesStats });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Failed to fetch stats" });
-  }
+    res.json({ total_theses: totalTheses || 0, total_targets: totalTargets || 0, weekly_signals: weeklySignals || 0, thesesStats });
+  } catch (e: any) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 export default app;

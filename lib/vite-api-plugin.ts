@@ -1,41 +1,19 @@
 import type { Plugin, ViteDevServer } from "vite";
-import { neon } from "@neondatabase/serverless";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-/**
- * Self-contained Vite plugin that handles /api/* routes during development.
- * Takes the DB connection URL directly so it doesn't depend on process.env.
- */
-export function apiPlugin(dbUrl: string): Plugin {
+export function apiPlugin(supabaseUrl: string, supabaseKey: string): Plugin {
   return {
     name: "api-routes",
     configureServer(server: ViteDevServer) {
-      // Create the neon sql client directly here - no dependency on lib/db.ts
-      // This avoids any process.env issues in the Vite config bundle
-      let neonSql: ReturnType<typeof neon> | null = null;
-      let schemaInited = false;
+      let db: SupabaseClient | null = null;
 
-      function getSql() {
-        if (neonSql) return neonSql;
-        if (!dbUrl) throw new Error("No database connection URL provided to API plugin");
-        neonSql = neon(dbUrl);
-        return neonSql;
-      }
-
-      async function sqlQuery(strings: TemplateStringsArray, ...values: unknown[]) {
-        const fn = getSql();
-        const rows = await fn(strings, ...values);
-        return { rows: Array.isArray(rows) ? rows : [rows] };
-      }
-
-      async function ensureSchema() {
-        if (schemaInited) return;
-        const fn = getSql();
-        const run = async (s: TemplateStringsArray, ...v: unknown[]) => fn(s, ...v);
-        await run`CREATE TABLE IF NOT EXISTS theses (id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL, size_range TEXT, funding_stage TEXT, geography TEXT, technologies TEXT, is_active INTEGER DEFAULT 1, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())`;
-        await run`CREATE TABLE IF NOT EXISTS targets (id TEXT PRIMARY KEY, thesis_id TEXT NOT NULL, name TEXT NOT NULL, one_liner TEXT, stage TEXT, headcount TEXT, signal_score INTEGER DEFAULT 0, top_signal TEXT, fit_rating TEXT, client_overlap_current TEXT, client_overlap_potential TEXT, product_rating TEXT, product_score INTEGER, valuation TEXT, funding_stage_detail TEXT, current_investors TEXT, last_updated TIMESTAMPTZ DEFAULT NOW(), is_pinned INTEGER DEFAULT 0, is_dismissed INTEGER DEFAULT 0, created_at TIMESTAMPTZ DEFAULT NOW())`;
-        await run`CREATE TABLE IF NOT EXISTS signals_history (id SERIAL PRIMARY KEY, target_id TEXT NOT NULL, score INTEGER, signal_text TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`;
-        await run`CREATE TABLE IF NOT EXISTS deep_dives (id TEXT PRIMARY KEY, target_id TEXT NOT NULL, content TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW())`;
-        schemaInited = true;
+      function getDb(): SupabaseClient {
+        if (db) return db;
+        if (!supabaseUrl || !supabaseKey) {
+          throw new Error("Supabase credentials not provided to apiPlugin");
+        }
+        db = createClient(supabaseUrl, supabaseKey);
+        return db;
       }
 
       function parseBody(req: import("http").IncomingMessage): Promise<any> {
@@ -55,122 +33,179 @@ export function apiPlugin(dbUrl: string): Plugin {
         res.end(JSON.stringify(data));
       }
 
-      if (dbUrl) {
-        console.log("[v0] API plugin: DB URL found, API routes active.");
-      } else {
-        console.warn("[v0] API plugin: No DB URL! API calls will fail.");
-      }
+      console.log("[v0] API plugin: supabaseUrl set:", !!supabaseUrl, "supabaseKey set:", !!supabaseKey);
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
         if (!url.startsWith("/api/")) return next();
 
-        try { await ensureSchema(); }
-        catch (e) { console.error("Schema init error:", e); return json(res, 500, { error: "DB init failed" }); }
-
         const method = req.method || "GET";
 
         try {
-          // --- Theses ---
+          const supabase = getDb();
+
+          // GET /api/theses
           if (url === "/api/theses" && method === "GET") {
-            const { rows } = await sqlQuery`SELECT * FROM theses ORDER BY updated_at DESC`;
-            return json(res, 200, rows);
+            const { data, error } = await supabase.from("theses").select("*").order("updated_at", { ascending: false });
+            if (error) throw error;
+            return json(res, 200, data || []);
           }
+
+          // POST /api/theses
           if (url === "/api/theses" && method === "POST") {
             const body = await parseBody(req);
             const { id, title, description, size_range, funding_stage, geography, technologies } = body;
-            await sqlQuery`INSERT INTO theses (id, title, description, size_range, funding_stage, geography, technologies, is_active) VALUES (${id}, ${title}, ${description}, ${size_range ?? null}, ${funding_stage ?? null}, ${geography ?? null}, ${technologies ?? null}, 1)`;
+            const { error } = await supabase.from("theses").insert({ id, title, description, size_range: size_range ?? null, funding_stage: funding_stage ?? null, geography: geography ?? null, technologies: technologies ?? null, is_active: 1 });
+            if (error) throw error;
             return json(res, 201, { id });
           }
+
+          // GET /api/stats
           if (url === "/api/stats" && method === "GET") {
-            const { rows: statsRows } = await sqlQuery`SELECT (SELECT COUNT(*)::int FROM theses) as total_theses, (SELECT COUNT(*)::int FROM targets) as total_targets, (SELECT COUNT(*)::int FROM signals_history WHERE created_at > NOW() - INTERVAL '7 days') as weekly_signals`;
-            const stats = statsRows[0];
-            const { rows: thesesStats } = await sqlQuery`SELECT t.id, (SELECT COUNT(*)::int FROM targets WHERE thesis_id = t.id) as targets_count, (SELECT COUNT(*)::int FROM signals_history sh JOIN targets tg ON sh.target_id = tg.id WHERE tg.thesis_id = t.id) as signals_count FROM theses t`;
-            return json(res, 200, { ...stats, thesesStats });
+            const { count: totalTheses } = await supabase.from("theses").select("*", { count: "exact", head: true });
+            const { count: totalTargets } = await supabase.from("targets").select("*", { count: "exact", head: true });
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { count: weeklySignals } = await supabase.from("signals_history").select("*", { count: "exact", head: true }).gte("created_at", weekAgo);
+            const { data: allTheses } = await supabase.from("theses").select("id");
+            const thesesStats = [];
+            for (const t of allTheses || []) {
+              const { count: tc } = await supabase.from("targets").select("*", { count: "exact", head: true }).eq("thesis_id", t.id);
+              const { data: tids } = await supabase.from("targets").select("id").eq("thesis_id", t.id);
+              let sc = 0;
+              if (tids && tids.length > 0) {
+                const { count } = await supabase.from("signals_history").select("*", { count: "exact", head: true }).in("target_id", tids.map((x: any) => x.id));
+                sc = count || 0;
+              }
+              thesesStats.push({ id: t.id, targets_count: tc || 0, signals_count: sc });
+            }
+            return json(res, 200, { total_theses: totalTheses || 0, total_targets: totalTargets || 0, weekly_signals: weeklySignals || 0, thesesStats });
           }
+
+          // POST /api/targets/bulk
           if (url === "/api/targets/bulk" && method === "POST") {
             const body = await parseBody(req);
             const { thesis_id, targets: targetsList } = body;
             if (!targetsList || !Array.isArray(targetsList)) return json(res, 400, { error: "Invalid targets data" });
-            for (const t of targetsList) {
-              await sqlQuery`INSERT INTO targets (id, thesis_id, name, one_liner, stage, headcount, signal_score, top_signal, fit_rating, client_overlap_current, client_overlap_potential, product_rating, product_score, valuation, funding_stage_detail, current_investors) VALUES (${t.id}, ${thesis_id}, ${t.name}, ${t.one_liner ?? null}, ${t.stage ?? null}, ${t.headcount ?? null}, ${t.signal_score ?? 0}, ${t.top_signal ?? null}, ${t.fit_rating ?? null}, ${t.client_overlap_current ?? null}, ${t.client_overlap_potential ?? null}, ${t.product_rating ?? null}, ${t.product_score ?? null}, ${t.valuation ?? null}, ${t.funding_stage_detail ?? null}, ${t.current_investors ?? null})`;
-            }
+            const rows = targetsList.map((t: any) => ({
+              id: t.id, thesis_id, name: t.name, one_liner: t.one_liner ?? null, stage: t.stage ?? null,
+              headcount: t.headcount ?? null, signal_score: t.signal_score ?? 0, top_signal: t.top_signal ?? null,
+              fit_rating: t.fit_rating ?? null, client_overlap_current: t.client_overlap_current ?? null,
+              client_overlap_potential: t.client_overlap_potential ?? null, product_rating: t.product_rating ?? null,
+              product_score: t.product_score ?? null, valuation: t.valuation ?? null,
+              funding_stage_detail: t.funding_stage_detail ?? null, current_investors: t.current_investors ?? null,
+            }));
+            const { error } = await supabase.from("targets").insert(rows);
+            if (error) throw error;
             return json(res, 201, { success: true });
           }
+
+          // POST /api/targets
           if (url === "/api/targets" && method === "POST") {
             const t = await parseBody(req);
-            await sqlQuery`INSERT INTO targets (id, thesis_id, name, one_liner, stage, headcount, signal_score, top_signal, fit_rating, client_overlap_current, client_overlap_potential, product_rating, product_score, valuation, funding_stage_detail, current_investors) VALUES (${t.id}, ${t.thesis_id}, ${t.name}, ${t.one_liner ?? null}, ${t.stage ?? null}, ${t.headcount ?? null}, ${t.signal_score ?? 0}, ${t.top_signal ?? null}, ${t.fit_rating ?? null}, ${t.client_overlap_current ?? null}, ${t.client_overlap_potential ?? null}, ${t.product_rating ?? null}, ${t.product_score ?? null}, ${t.valuation ?? null}, ${t.funding_stage_detail ?? null}, ${t.current_investors ?? null})`;
+            const { error } = await supabase.from("targets").insert({
+              id: t.id, thesis_id: t.thesis_id, name: t.name, one_liner: t.one_liner ?? null,
+              stage: t.stage ?? null, headcount: t.headcount ?? null, signal_score: t.signal_score ?? 0,
+              top_signal: t.top_signal ?? null, fit_rating: t.fit_rating ?? null,
+              client_overlap_current: t.client_overlap_current ?? null, client_overlap_potential: t.client_overlap_potential ?? null,
+              product_rating: t.product_rating ?? null, product_score: t.product_score ?? null,
+              valuation: t.valuation ?? null, funding_stage_detail: t.funding_stage_detail ?? null,
+              current_investors: t.current_investors ?? null,
+            });
+            if (error) throw error;
             return json(res, 201, { id: t.id });
           }
+
+          // POST /api/deep-dives
           if (url === "/api/deep-dives" && method === "POST") {
             const body = await parseBody(req);
             const { id, target_id, content } = body;
             const contentStr = typeof content === "string" ? content : JSON.stringify(content);
-            await sqlQuery`INSERT INTO deep_dives (id, target_id, content) VALUES (${id}, ${target_id}, ${contentStr}) ON CONFLICT (id) DO UPDATE SET target_id = ${target_id}, content = ${contentStr}`;
+            const { error } = await supabase.from("deep_dives").upsert({ id, target_id, content: contentStr });
+            if (error) throw error;
             return json(res, 201, { id });
           }
+
+          // POST /api/signals
           if (url === "/api/signals" && method === "POST") {
             const body = await parseBody(req);
             const { target_id, score, signal_text } = body;
-            await sqlQuery`INSERT INTO signals_history (target_id, score, signal_text) VALUES (${target_id}, ${score ?? null}, ${signal_text ?? null})`;
+            const { error } = await supabase.from("signals_history").insert({ target_id, score: score ?? null, signal_text: signal_text ?? null });
+            if (error) throw error;
             return json(res, 201, { success: true });
           }
 
           // --- Parameterized routes ---
           const thesisToggle = url.match(/^\/api\/theses\/([^/]+)\/toggle$/);
           if (thesisToggle && method === "PATCH") {
-            await sqlQuery`UPDATE theses SET is_active = 1 - is_active WHERE id = ${thesisToggle[1]}`;
+            const { data: thesis } = await supabase.from("theses").select("is_active").eq("id", thesisToggle[1]).single();
+            const { error } = await supabase.from("theses").update({ is_active: thesis?.is_active === 1 ? 0 : 1 }).eq("id", thesisToggle[1]);
+            if (error) throw error;
             return json(res, 200, { success: true });
           }
+
           const thesisTargets = url.match(/^\/api\/theses\/([^/]+)\/targets$/);
           if (thesisTargets && method === "GET") {
-            const { rows } = await sqlQuery`SELECT * FROM targets WHERE thesis_id = ${thesisTargets[1]} ORDER BY signal_score DESC`;
-            return json(res, 200, rows);
+            const { data, error } = await supabase.from("targets").select("*").eq("thesis_id", thesisTargets[1]).order("signal_score", { ascending: false });
+            if (error) throw error;
+            return json(res, 200, data || []);
           }
+
           const thesisById = url.match(/^\/api\/theses\/([^/]+)$/);
           if (thesisById && method === "GET") {
-            const { rows } = await sqlQuery`SELECT * FROM theses WHERE id = ${thesisById[1]}`;
-            return json(res, 200, rows[0] || null);
+            const { data, error } = await supabase.from("theses").select("*").eq("id", thesisById[1]).single();
+            if (error && error.code !== "PGRST116") throw error;
+            return json(res, 200, data || null);
           }
           if (thesisById && method === "PUT") {
             const body = await parseBody(req);
             const { title, description, size_range, funding_stage, geography, technologies } = body;
-            await sqlQuery`UPDATE theses SET title = ${title}, description = ${description}, size_range = ${size_range ?? null}, funding_stage = ${funding_stage ?? null}, geography = ${geography ?? null}, technologies = ${technologies ?? null}, updated_at = NOW() WHERE id = ${thesisById[1]}`;
+            const { error } = await supabase.from("theses").update({ title, description, size_range: size_range ?? null, funding_stage: funding_stage ?? null, geography: geography ?? null, technologies: technologies ?? null, updated_at: new Date().toISOString() }).eq("id", thesisById[1]);
+            if (error) throw error;
             return json(res, 200, { success: true });
           }
           if (thesisById && method === "DELETE") {
-            await sqlQuery`DELETE FROM theses WHERE id = ${thesisById[1]}`;
+            const { error } = await supabase.from("theses").delete().eq("id", thesisById[1]);
+            if (error) throw error;
             return json(res, 200, { success: true });
           }
+
           const targetDeepDive = url.match(/^\/api\/targets\/([^/]+)\/deep-dive$/);
           if (targetDeepDive && method === "GET") {
-            const { rows } = await sqlQuery`SELECT * FROM deep_dives WHERE target_id = ${targetDeepDive[1]}`;
-            return json(res, 200, rows[0] || null);
+            const { data, error } = await supabase.from("deep_dives").select("*").eq("target_id", targetDeepDive[1]).limit(1).maybeSingle();
+            if (error) throw error;
+            return json(res, 200, data || null);
           }
+
           const targetSignals = url.match(/^\/api\/targets\/([^/]+)\/signals$/);
           if (targetSignals && method === "GET") {
-            const { rows } = await sqlQuery`SELECT * FROM signals_history WHERE target_id = ${targetSignals[1]} ORDER BY created_at DESC`;
-            return json(res, 200, rows);
+            const { data, error } = await supabase.from("signals_history").select("*").eq("target_id", targetSignals[1]).order("created_at", { ascending: false });
+            if (error) throw error;
+            return json(res, 200, data || []);
           }
+
           const targetById = url.match(/^\/api\/targets\/([^/]+)$/);
           if (targetById && method === "PATCH") {
             const body = await parseBody(req);
             const id = targetById[1];
-            if (body.signal_score !== undefined) await sqlQuery`UPDATE targets SET signal_score = ${body.signal_score}, last_updated = NOW() WHERE id = ${id}`;
-            if (body.top_signal !== undefined) await sqlQuery`UPDATE targets SET top_signal = ${body.top_signal}, last_updated = NOW() WHERE id = ${id}`;
-            if (body.is_pinned !== undefined) await sqlQuery`UPDATE targets SET is_pinned = ${body.is_pinned}, last_updated = NOW() WHERE id = ${id}`;
-            if (body.is_dismissed !== undefined) await sqlQuery`UPDATE targets SET is_dismissed = ${body.is_dismissed}, last_updated = NOW() WHERE id = ${id}`;
+            const updates: Record<string, unknown> = { last_updated: new Date().toISOString() };
+            if (body.signal_score !== undefined) updates.signal_score = body.signal_score;
+            if (body.top_signal !== undefined) updates.top_signal = body.top_signal;
+            if (body.is_pinned !== undefined) updates.is_pinned = body.is_pinned;
+            if (body.is_dismissed !== undefined) updates.is_dismissed = body.is_dismissed;
+            const { error } = await supabase.from("targets").update(updates).eq("id", id);
+            if (error) throw error;
             return json(res, 200, { success: true });
           }
           if (targetById && method === "DELETE") {
-            await sqlQuery`DELETE FROM targets WHERE id = ${targetById[1]}`;
+            const { error } = await supabase.from("targets").delete().eq("id", targetById[1]);
+            if (error) throw error;
             return json(res, 200, { success: true });
           }
 
           json(res, 404, { error: "API route not found" });
-        } catch (e) {
+        } catch (e: any) {
           console.error("API error:", e);
-          json(res, 500, { error: "Internal server error" });
+          json(res, 500, { error: e.message || "Internal server error" });
         }
       });
     },
